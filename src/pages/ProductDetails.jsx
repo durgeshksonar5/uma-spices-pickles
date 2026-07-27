@@ -1,33 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { products } from '../data/products';
+import { productApi } from '../api/productApi';
 import { useCart } from '../context/CartContext';
 import { Breadcrumb } from '../components/common/Breadcrumb';
 import { ProductCard } from '../components/products/ProductCard';
 import { WhatsAppCheckoutForm } from '../components/cart/WhatsAppCheckoutForm';
 import { formatCurrency } from '../utils/currency';
+import { businessConfig } from '../config/businessConfig';
 import {
-  ShoppingBag,
   MessageCircle,
   Minus,
   Plus,
   ChevronDown,
-  Check,
-  Star
+  Star,
+  RefreshCw
 } from 'lucide-react';
 
 export const ProductDetails = () => {
   const { slug } = useParams();
   const { addToCart } = useCart();
 
-  const product = products.find((p) => p.slug === slug) || products[0];
+  const [product, setProduct] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [selectedSizeIndex, setSelectedSizeIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [isAdded, setIsAdded] = useState(false);
   const [isDirectCheckoutOpen, setIsDirectCheckoutOpen] = useState(false);
 
-  // Accordion state for 5 accordions
+  // Accordion state
   const [openAccordions, setOpenAccordions] = useState({
     details: true,
     ingredients: false,
@@ -40,35 +42,83 @@ export const ProductDetails = () => {
     setOpenAccordions((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const currentSize = product.availableSizes && product.availableSizes[selectedSizeIndex]
-    ? product.availableSizes[selectedSizeIndex]
-    : { size: 'Pack', price: product.price };
+  useEffect(() => {
+    const loadProductData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const res = await productApi.getProductBySlug(slug);
+        if (res.success && res.data) {
+          setProduct(res.data);
+          setSelectedSizeIndex(0);
 
-  const handleAddToCart = () => {
-    addToCart(product, currentSize, quantity);
-    setIsAdded(true);
-    setTimeout(() => {
-      setIsAdded(false);
-    }, 1800);
+          // Fetch related products
+          const relRes = await productApi.getProducts({
+            category: res.data.category,
+            limit: 4,
+            status: 'published'
+          });
+          if (relRes.success && relRes.data) {
+            setRelatedProducts(relRes.data.filter((p) => p.slug !== slug).slice(0, 4));
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching product details:', err);
+        setError(err.message || 'Product not found.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    const cleanNumber = businessConfig.whatsAppNumber.replace(/\D/g, '');
-    const itemSubtotal = currentSize.price * quantity;
-    const message = `Hello ${businessConfig.brandName},\n\nI would like to order:\n\nProduct: ${product.name}\nSize: ${currentSize.size}\nQuantity: ${quantity}\nSubtotal: ${formatCurrency(itemSubtotal)}\n\nPlease confirm availability and delivery details.`;
-    const waUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
-    window.open(waUrl, '_blank', 'noopener,noreferrer');
-  };
+    loadProductData();
+  }, [slug]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#FFFBF5] py-16 flex flex-col items-center justify-center space-y-3">
+        <div className="w-10 h-10 border-4 border-[#9A6428] border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-sm font-bold text-[#5E3718] font-serif">Loading Product Details...</p>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="min-h-screen bg-[#FFFBF5] py-16 text-center space-y-4">
+        <h2 className="font-serif text-2xl font-bold text-[#5E3718]">Product Not Found</h2>
+        <p className="text-xs text-[#777166]">{error || 'The requested product could not be located.'}</p>
+        <Link
+          to="/shop"
+          className="inline-block px-5 py-2.5 rounded-xl bg-[#9A6428] text-white text-xs font-bold shadow-xs"
+        >
+          Back to Shop
+        </Link>
+      </div>
+    );
+  }
+
+  // Calculate sizes list
+  const sizesList =
+    product.availableSizes && product.availableSizes.length > 0
+      ? product.availableSizes
+      : product.sizes && product.sizes.length > 0
+      ? product.sizes.map((s) => ({ size: s.label, price: s.price }))
+      : [{ size: 'Standard Pack', price: product.basePrice || product.price }];
+
+  const currentSize = sizesList[selectedSizeIndex] || sizesList[0];
 
   const handleDirectWhatsAppOrder = () => {
     addToCart(product, currentSize, quantity, false);
     setIsDirectCheckoutOpen(true);
   };
 
-  const relatedProducts = products
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
+  const mainImageUrl =
+    product.images && product.images.length > 0
+      ? product.images[0].url
+      : 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=800';
 
   return (
-    <div className="bg-[#FFFBF5] min-h-screen py-8">
+    <div className="bg-[#FFFBF5] min-h-screen py-8 text-left">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb Navigation */}
         <Breadcrumb
@@ -85,7 +135,7 @@ export const ProductDetails = () => {
             <div className="lg:col-span-6 space-y-4">
               <div className="relative h-80 sm:h-96 w-full rounded-xl overflow-hidden bg-white border border-[#E8DDCF] shadow-xs">
                 <img
-                  src={product.images[0]}
+                  src={mainImageUrl}
                   alt={product.name}
                   className="w-full h-full object-contain p-4"
                 />
@@ -96,7 +146,7 @@ export const ProductDetails = () => {
             <div className="lg:col-span-6 space-y-5">
               <div className="space-y-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#9A6428] bg-[#F9EFDD] px-3 py-1 rounded-full inline-block">
-                  {product.category.replace('-', ' ')}
+                  {product.category}
                 </span>
 
                 <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#5E3718]">
@@ -123,34 +173,29 @@ export const ProductDetails = () => {
                   <span className="font-sans font-bold text-3xl text-[#171717]">
                     {formatCurrency(currentSize.price)}
                   </span>
-                  {product.originalPrice && (
+                  {product.basePrice && product.basePrice > currentSize.price && (
                     <span className="text-sm text-[#777166] line-through">
-                      {formatCurrency(Math.round(currentSize.price * 1.2))}
-                    </span>
-                  )}
-                  {product.discount && (
-                    <span className="text-xs font-bold text-[#9A6428] bg-[#9A6428]/15 px-2 py-0.5 rounded">
-                      {product.discount}% OFF
+                      {formatCurrency(product.basePrice)}
                     </span>
                   )}
                 </div>
 
                 <p className="text-sm text-[#777166] leading-relaxed pt-2">
-                  {product.shortDescription}
+                  {product.shortDescription || product.description}
                 </p>
               </div>
 
-              {/* Size Selector - MUST update price immediately! */}
+              {/* Size Selector */}
               <div className="space-y-2 pt-3 border-t border-[#E8DDCF]">
                 <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
                   Select Size / Weight:
                 </label>
                 <div className="flex flex-wrap items-center gap-2">
-                  {product.availableSizes.map((sizeObj, idx) => (
+                  {sizesList.map((sizeObj, idx) => (
                     <button
                       key={idx}
                       onClick={() => setSelectedSizeIndex(idx)}
-                      className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all flex items-center gap-2 ${
+                      className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all flex items-center gap-2 cursor-pointer ${
                         selectedSizeIndex === idx
                           ? 'bg-[#9A6428] text-white border-[#9A6428] shadow-xs'
                           : 'bg-white text-[#171717] border-[#E8DDCF] hover:border-[#9A6428]'
@@ -172,7 +217,7 @@ export const ProductDetails = () => {
                   <div className="flex items-center border border-[#E8DDCF] bg-white rounded-lg overflow-hidden">
                     <button
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      className="p-2.5 hover:bg-[#F9EFDD] text-[#171717] font-bold"
+                      className="p-2.5 hover:bg-[#F9EFDD] text-[#171717] font-bold cursor-pointer"
                       aria-label="Decrease quantity"
                     >
                       <Minus className="w-4 h-4" />
@@ -180,7 +225,7 @@ export const ProductDetails = () => {
                     <span className="px-4 font-bold text-base text-[#171717]">{quantity}</span>
                     <button
                       onClick={() => setQuantity((q) => q + 1)}
-                      className="p-2.5 hover:bg-[#F9EFDD] text-[#171717] font-bold"
+                      className="p-2.5 hover:bg-[#F9EFDD] text-[#171717] font-bold cursor-pointer"
                       aria-label="Increase quantity"
                     >
                       <Plus className="w-4 h-4" />
@@ -213,19 +258,19 @@ export const ProductDetails = () => {
           <div className="border border-[#E8DDCF] rounded-xl overflow-hidden bg-white">
             <button
               onClick={() => toggleAccordion('details')}
-              className="w-full p-4 text-left font-bold text-sm text-[#171717] flex items-center justify-between bg-[#F9EFDD]/50"
+              className="w-full p-4 text-left font-bold text-sm text-[#171717] flex items-center justify-between bg-[#F9EFDD]/50 cursor-pointer"
             >
               <span>Product Details</span>
               <ChevronDown className={`w-4 h-4 transition-transform ${openAccordions.details ? 'rotate-180' : ''}`} />
             </button>
             {openAccordions.details && (
               <div className="p-4 text-xs sm:text-sm text-[#777166] leading-relaxed border-t border-[#E8DDCF] space-y-2">
-                <p>{product.fullDescription}</p>
-                {product.flavourProfile && (
-                  <p><strong>Flavour Profile:</strong> {product.flavourProfile}</p>
-                )}
+                <p>{product.description || product.shortDescription}</p>
                 {product.sku && (
                   <p><strong>SKU:</strong> {product.sku}</p>
+                )}
+                {product.brand && (
+                  <p><strong>Brand:</strong> {product.brand}</p>
                 )}
               </div>
             )}
@@ -235,14 +280,14 @@ export const ProductDetails = () => {
           <div className="border border-[#E8DDCF] rounded-xl overflow-hidden bg-white">
             <button
               onClick={() => toggleAccordion('ingredients')}
-              className="w-full p-4 text-left font-bold text-sm text-[#171717] flex items-center justify-between bg-[#F9EFDD]/50"
+              className="w-full p-4 text-left font-bold text-sm text-[#171717] flex items-center justify-between bg-[#F9EFDD]/50 cursor-pointer"
             >
               <span>Ingredients</span>
               <ChevronDown className={`w-4 h-4 transition-transform ${openAccordions.ingredients ? 'rotate-180' : ''}`} />
             </button>
             {openAccordions.ingredients && (
               <div className="p-4 text-xs sm:text-sm text-[#777166] leading-relaxed border-t border-[#E8DDCF]">
-                {product.ingredients}
+                {product.ingredients || '100% natural, pure raw ingredients without artificial flavors or synthetic colors.'}
               </div>
             )}
           </div>
@@ -251,14 +296,14 @@ export const ProductDetails = () => {
           <div className="border border-[#E8DDCF] rounded-xl overflow-hidden bg-white">
             <button
               onClick={() => toggleAccordion('howToUse')}
-              className="w-full p-4 text-left font-bold text-sm text-[#171717] flex items-center justify-between bg-[#F9EFDD]/50"
+              className="w-full p-4 text-left font-bold text-sm text-[#171717] flex items-center justify-between bg-[#F9EFDD]/50 cursor-pointer"
             >
               <span>How to Use</span>
               <ChevronDown className={`w-4 h-4 transition-transform ${openAccordions.howToUse ? 'rotate-180' : ''}`} />
             </button>
             {openAccordions.howToUse && (
               <div className="p-4 text-xs sm:text-sm text-[#777166] leading-relaxed border-t border-[#E8DDCF]">
-                {product.recommendedDishes || "Add to your daily curries, gravies, or serve alongside hot rice, parathas and snacks for authentic flavor."}
+                Add to your daily curries, gravies, or serve alongside hot rice, parathas and snacks for authentic flavor.
               </div>
             )}
           </div>
@@ -267,15 +312,15 @@ export const ProductDetails = () => {
           <div className="border border-[#E8DDCF] rounded-xl overflow-hidden bg-white">
             <button
               onClick={() => toggleAccordion('storage')}
-              className="w-full p-4 text-left font-bold text-sm text-[#171717] flex items-center justify-between bg-[#F9EFDD]/50"
+              className="w-full p-4 text-left font-bold text-sm text-[#171717] flex items-center justify-between bg-[#F9EFDD]/50 cursor-pointer"
             >
               <span>Storage Instructions</span>
               <ChevronDown className={`w-4 h-4 transition-transform ${openAccordions.storage ? 'rotate-180' : ''}`} />
             </button>
             {openAccordions.storage && (
               <div className="p-4 text-xs sm:text-sm text-[#777166] leading-relaxed border-t border-[#E8DDCF] space-y-1">
-                <p>{product.storageInstructions}</p>
-                <p><strong>Shelf Life:</strong> {product.shelfLife}</p>
+                <p>{product.storageInstructions || 'Store in an airtight container in a cool, dry place away from direct sunlight.'}</p>
+                <p><strong>Shelf Life:</strong> {product.shelfLife || '12 Months'}</p>
               </div>
             )}
           </div>
@@ -284,7 +329,7 @@ export const ProductDetails = () => {
           <div className="border border-[#E8DDCF] rounded-xl overflow-hidden bg-white">
             <button
               onClick={() => toggleAccordion('delivery')}
-              className="w-full p-4 text-left font-bold text-sm text-[#171717] flex items-center justify-between bg-[#F9EFDD]/50"
+              className="w-full p-4 text-left font-bold text-sm text-[#171717] flex items-center justify-between bg-[#F9EFDD]/50 cursor-pointer"
             >
               <span>Delivery Information</span>
               <ChevronDown className={`w-4 h-4 transition-transform ${openAccordions.delivery ? 'rotate-180' : ''}`} />
@@ -306,7 +351,7 @@ export const ProductDetails = () => {
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {relatedProducts.map((p) => (
-                <ProductCard key={p.id} product={p} />
+                <ProductCard key={p._id || p.id} product={p} />
               ))}
             </div>
           </div>

@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import { ToastProvider } from './context/ToastContext';
+import { AuthProvider } from './context/AuthContext';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { ScrollToTop } from './components/common/ScrollToTop';
@@ -9,8 +10,10 @@ import { WhatsAppFloatingButton } from './components/layout/WhatsAppFloatingButt
 import { CartDrawer } from './components/cart/CartDrawer';
 import { ToastContainer } from './components/common/Toast';
 import { ProductGridSkeleton } from './components/common/LoadingSkeleton';
+import { ProtectedRoute } from './components/admin/ProtectedRoute';
+import { AdminLayout } from './components/admin/AdminLayout';
 
-// Lazy loading pages for optimal performance
+// Lazy loading pages
 const Home = lazy(() => import('./pages/Home'));
 const Shop = lazy(() => import('./pages/Shop'));
 const ProductDetails = lazy(() => import('./pages/ProductDetails'));
@@ -20,44 +23,70 @@ const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
+// Admin pages
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminProductsList = lazy(() => import('./pages/admin/AdminProductsList'));
+const ProductForm = lazy(() => import('./pages/admin/ProductForm'));
+
 export const App = () => {
   return (
-    <ToastProvider>
-      <CartProvider>
-        <Router>
-          <div className="flex flex-col min-h-screen bg-[#FFF8ED] text-[#3B2618]">
+    <AuthProvider>
+      <ToastProvider>
+        <CartProvider>
+          <Router>
             <ScrollToTop />
-            <Header />
+            <Suspense
+              fallback={
+                <div className="max-w-7xl mx-auto px-4 py-16">
+                  <ProductGridSkeleton count={8} />
+                </div>
+              }
+            >
+              <Routes>
+                {/* Unified Admin Route (/admin) - Shows login if unauthenticated, Admin Dashboard if authenticated */}
+                <Route element={<ProtectedRoute />}>
+                  <Route element={<AdminLayout />}>
+                    <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/admin/products" element={<AdminProductsList />} />
+                    <Route path="/admin/products/add" element={<ProductForm />} />
+                    <Route path="/admin/products/edit/:id" element={<ProductForm />} />
+                  </Route>
+                </Route>
 
-            <main className="flex-grow">
-              <Suspense
-                fallback={
-                  <div className="max-w-7xl mx-auto px-4 py-16">
-                    <ProductGridSkeleton count={8} />
-                  </div>
-                }
-              >
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/shop" element={<Shop />} />
-                  <Route path="/product/:slug" element={<ProductDetails />} />
-                  <Route path="/wishlist" element={<Wishlist />} />
-                  <Route path="/cart" element={<Cart />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </main>
+                {/* Public Website Routes */}
+                <Route
+                  path="*"
+                  element={
+                    <div className="flex flex-col min-h-screen bg-[#FFFBF5] text-[#3B2618]">
+                      <Header />
 
-            <Footer />
-            <CartDrawer />
-            <WhatsAppFloatingButton />
+                      <main className="flex-grow">
+                        <Routes>
+                          <Route path="/" element={<Home />} />
+                          <Route path="/shop" element={<Shop />} />
+                          <Route path="/product/:slug" element={<ProductDetails />} />
+                          <Route path="/wishlist" element={<Wishlist />} />
+                          <Route path="/cart" element={<Cart />} />
+                          <Route path="/about" element={<About />} />
+                          <Route path="/contact" element={<Contact />} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </main>
+
+                      <Footer />
+                      <CartDrawer />
+                      <WhatsAppFloatingButton />
+                    </div>
+                  }
+                />
+              </Routes>
+            </Suspense>
+
             <ToastContainer />
-          </div>
-        </Router>
-      </CartProvider>
-    </ToastProvider>
+          </Router>
+        </CartProvider>
+      </ToastProvider>
+    </AuthProvider>
   );
 };
 

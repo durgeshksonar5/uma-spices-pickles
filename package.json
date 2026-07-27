@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server": "node backend/server.js",
+    "seed": "node backend/scripts/seed.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

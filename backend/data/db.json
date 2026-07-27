@@ -1,0 +1,245 @@
+{
+  "users": [
+    {
+      "_id": "usr-admin-01",
+      "name": "Admin Gajanan",
+      "email": "admin@gajananservices.com",
+      "password": "$2a$10$X7hN9z8L3/qYw1234567890abcdefghijklmnopqrstuvwxyz", 
+      "plainPassword": "admin123",
+      "role": "superadmin"
+    }
+  ],
+  "products": [
+    {
+      "_id": "prod-turmeric-powder",
+      "id": "prod-turmeric-powder",
+      "slug": "turmeric-powder",
+      "name": "Turmeric Powder",
+      "descriptor": "Pure & Natural",
+      "category": "spices",
+      "subcategory": "Spice Powder",
+      "shortDescription": "High-curcumin golden turmeric powder ground from sun-dried Salem roots.",
+      "description": "Our Turmeric Powder is ground from premium sun-dried whole turmeric fingers with high natural curcumin levels.",
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=800", "filename": "", "altText": "Turmeric Powder", "isPrimary": true }
+      ],
+      "basePrice": 550,
+      "salePrice": 550,
+      "price": 550,
+      "sizes": [
+        { "label": "100g", "price": 250, "stock": 20 },
+        { "label": "250g", "price": 550, "stock": 25 },
+        { "label": "500g", "price": 980, "stock": 15 }
+      ],
+      "availableSizes": [
+        { "size": "100g", "price": 250 },
+        { "size": "250g", "price": 550 },
+        { "size": "500g", "price": 980 }
+      ],
+      "stock": 45,
+      "status": "published",
+      "isFeatured": true,
+      "isActive": true,
+      "bestSeller": true,
+      "sku": "GAJ-TUR-01",
+      "createdAt": "2026-07-27T08:00:00.000Z",
+      "updatedAt": "2026-07-27T08:00:00.000Z"
+    },
+    {
+      "_id": "prod-red-chilli-powder",
+      "id": "prod-red-chilli-powder",
+      "slug": "red-chilli-powder",
+      "name": "Red Chilli Powder",
+      "descriptor": "Rich & Spicy",
+      "category": "spices",
+      "subcategory": "Spice Powder",
+      "shortDescription": "Authentic Kashmiri red chilli powder providing rich crimson color with mild warmth.",
+      "description": "Handpicked stemless Kashmiri chillies ground to perfection.",
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1588252303782-cb80119abd6d?auto=format&fit=crop&q=80&w=800", "filename": "", "altText": "Red Chilli Powder", "isPrimary": true }
+      ],
+      "basePrice": 680,
+      "salePrice": 680,
+      "price": 680,
+      "sizes": [
+        { "label": "100g", "price": 310, "stock": 20 },
+        { "label": "250g", "price": 680, "stock": 30 }
+      ],
+      "availableSizes": [
+        { "size": "100g", "price": 310 },
+        { "size": "250g", "price": 680 }
+      ],
+      "stock": 60,
+      "status": "published",
+      "isFeatured": true,
+      "isActive": true,
+      "bestSeller": true,
+      "sku": "GAJ-RCH-02",
+      "createdAt": "2026-07-27T08:00:00.000Z",
+      "updatedAt": "2026-07-27T08:00:00.000Z"
+    },
+    {
+      "_id": "prod-mango-pickle",
+      "id": "prod-mango-pickle",
+      "slug": "mango-pickle",
+      "name": "Mango Pickle",
+      "descriptor": "Traditional Recipe",
+      "category": "pickles",
+      "subcategory": "Handcrafted Pickle",
+      "shortDescription": "Sun-cured raw mango cubes steeped in cold-pressed mustard oil & spices.",
+      "description": "Crisp green raw mangoes cured naturally in ceramic jars with mustard seeds and cold-pressed mustard oil.",
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&q=80&w=800", "filename": "", "altText": "Mango Pickle", "isPrimary": true }
+      ],
+      "basePrice": 750,
+      "salePrice": 750,
+      "price": 750,
+      "sizes": [
+        { "label": "250g", "price": 390, "stock": 30 },
+        { "label": "500g", "price": 750, "stock": 35 }
+      ],
+      "availableSizes": [
+        { "size": "250g", "price": 390 },
+        { "size": "500g", "price": 750 }
+      ],
+      "stock": 80,
+      "status": "published",
+      "isFeatured": true,
+      "isActive": true,
+      "bestSeller": true,
+      "sku": "GAJ-MGO-08",
+      "createdAt": "2026-07-27T08:00:00.000Z",
+      "updatedAt": "2026-07-27T08:00:00.000Z"
+    },
+    {
+      "_id": "prod-lemon-pickle",
+      "id": "prod-lemon-pickle",
+      "slug": "lemon-pickle",
+      "name": "Lemon Pickle",
+      "descriptor": "Tangy & Spicy",
+      "category": "pickles",
+      "subcategory": "Oil-Free Cured",
+      "shortDescription": "Sun-aged thin-skinned lemons cured in rock salt, ajwain & digestive spices.",
+      "description": "Juicy Kagzi lemons aged in sun jars until soft and tender.",
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&q=80&w=800", "filename": "", "altText": "Lemon Pickle", "isPrimary": true }
+      ],
+      "basePrice": 700,
+      "salePrice": 700,
+      "price": 700,
+      "sizes": [
+        { "label": "250g", "price": 360, "stock": 20 },
+        { "label": "500g", "price": 700, "stock": 20 }
+      ],
+      "availableSizes": [
+        { "size": "250g", "price": 360 },
+        { "size": "500g", "price": 700 }
+      ],
+      "stock": 50,
+      "status": "published",
+      "isFeatured": true,
+      "isActive": true,
+      "bestSeller": true,
+      "sku": "GAJ-LEM-09",
+      "createdAt": "2026-07-27T08:00:00.000Z",
+      "updatedAt": "2026-07-27T08:00:00.000Z"
+    },
+    {
+      "_id": "prod-mixed-pickle",
+      "id": "prod-mixed-pickle",
+      "slug": "mixed-pickle",
+      "name": "Mixed Pickle",
+      "descriptor": "Classic Homemade",
+      "category": "pickles",
+      "subcategory": "Mixed Pickle",
+      "shortDescription": "Crunchy medley of raw mango, carrot, green chilli and lemon in aromatic spices.",
+      "description": "A traditional Punjabi-style winter mix pickle featuring crisp vegetables marinated in mustard oil.",
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1606914501449-5a96b6ce24b6?auto=format&fit=crop&q=80&w=800", "filename": "", "altText": "Mixed Pickle", "isPrimary": true }
+      ],
+      "basePrice": 780,
+      "salePrice": 780,
+      "price": 780,
+      "sizes": [
+        { "label": "250g", "price": 410, "stock": 15 },
+        { "label": "500g", "price": 780, "stock": 20 }
+      ],
+      "availableSizes": [
+        { "size": "250g", "price": 410 },
+        { "size": "500g", "price": 780 }
+      ],
+      "stock": 45,
+      "status": "published",
+      "isFeatured": true,
+      "isActive": true,
+      "bestSeller": true,
+      "sku: "GAJ-MIX-10",
+      "createdAt": "2026-07-27T08:00:00.000Z",
+      "updatedAt": "2026-07-27T08:00:00.000Z"
+    },
+    {
+      "_id": "prod-garam-masala",
+      "id": "prod-garam-masala",
+      "slug": "garam-masala",
+      "name": "Garam Masala",
+      "descriptor": "Aromatic Blend",
+      "category": "blends",
+      "subcategory": "Traditional Blend",
+      "shortDescription": "Heritage royal blend of 13 whole roasted aromatic spices.",
+      "description": "A classic blend perfected over generations containing green cardamom, cloves, cinnamon, and nutmeg.",
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1532336414038-cf19250c5757?auto=format&fit=crop&q=80&w=800", "filename": "", "altText": "Garam Masala", "isPrimary": true }
+      ],
+      "basePrice": 490,
+      "salePrice": 490,
+      "price": 490,
+      "sizes": [
+        { "label": "100g", "price": 230, "stock": 20 },
+        { "label": "250g", "price": 490, "stock": 20 }
+      ],
+      "availableSizes": [
+        { "size": "100g", "price": 230 },
+        { "size": "250g", "price": 490 }
+      ],
+      "stock": 50,
+      "status": "published",
+      "isFeatured": true,
+      "isActive": true,
+      "bestSeller": true,
+      "sku": "GAJ-GAR-14",
+      "createdAt": "2026-07-27T08:00:00.000Z",
+      "updatedAt": "2026-07-27T08:00:00.000Z"
+    },
+    {
+      "_id": "prod-chefs-signature-bundle",
+      "id": "prod-chefs-signature-bundle",
+      "slug": "chefs-signature-bundle",
+      "name": "Chef’s Signature Bundle",
+      "descriptor": "Best Value Gift Box",
+      "category": "blends",
+      "subcategory": "Combo Pack",
+      "shortDescription": "A curated combo of our 5 best-selling spices and handcrafted pickles.",
+      "description": "Includes 250g Salem Turmeric Powder, 250g Kashmiri Red Chilli Powder, 250g Garam Masala, 250g Mango Pickle, and 250g Lemon Pickle.",
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=800", "filename": "", "altText": "Chef Signature Bundle", "isPrimary": true }
+      ],
+      "basePrice": 2150,
+      "salePrice": 2150,
+      "price": 2150,
+      "sizes": [
+        { "label": "Standard Gift Box", "price": 2150, "stock": 25 }
+      ],
+      "availableSizes": [
+        { "size": "Standard Gift Box", "price": 2150 }
+      ],
+      "stock": 25,
+      "status": "published",
+      "isFeatured": true,
+      "isActive": true,
+      "bestSeller": true,
+      "sku": "GAJ-BND-18",
+      "createdAt": "2026-07-27T08:00:00.000Z",
+      "updatedAt": "2026-07-27T08:00:00.000Z"
+    }
+  ]
+}

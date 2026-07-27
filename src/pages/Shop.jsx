@@ -1,14 +1,19 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Breadcrumb } from '../components/common/Breadcrumb';
 import { ProductCard } from '../components/products/ProductCard';
-import { products } from '../data/products';
+import { productApi } from '../api/productApi';
 import { categories } from '../data/categories';
-import { Sparkles, ArrowUpDown } from 'lucide-react';
+import { ProductGridSkeleton } from '../components/common/LoadingSkeleton';
+import { Sparkles, ArrowUpDown, RefreshCw } from 'lucide-react';
 
 export const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCategory = searchParams.get('category') || 'all';
+
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [sortBy, setSortBy] = useState('featured');
@@ -17,6 +22,31 @@ export const Shop = () => {
     const cat = searchParams.get('category');
     if (cat) setSelectedCategory(cat);
   }, [searchParams]);
+
+  const loadProducts = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await productApi.getProducts({
+        category: selectedCategory !== 'all' ? selectedCategory : '',
+        sort: sortBy,
+        status: 'published',
+        limit: 100
+      });
+      if (res.success && res.data) {
+        setProducts(res.data);
+      }
+    } catch (err) {
+      console.error('Error fetching shop products:', err);
+      setError(err.message || 'Failed to load products.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProducts();
+  }, [selectedCategory, sortBy]);
 
   const handleCategoryChange = (slug) => {
     setSelectedCategory(slug);
@@ -29,29 +59,11 @@ export const Shop = () => {
     setSearchParams(newParams);
   };
 
-  // Filter & Sort Products
-  const filteredProducts = useMemo(() => {
-    return products
-      .filter((p) => {
-        if (selectedCategory !== 'all' && p.category !== selectedCategory) {
-          return false;
-        }
-        return true;
-      })
-      .sort((a, b) => {
-        if (sortBy === 'price-low') return a.price - b.price;
-        if (sortBy === 'price-high') return b.price - a.price;
-        if (sortBy === 'best-selling') return (b.bestSeller ? 1 : 0) - (a.bestSeller ? 1 : 0);
-        if (sortBy === 'rating') return b.rating - a.rating;
-        return 0; // featured default
-      });
-  }, [selectedCategory, sortBy]);
-
   const activeCategoryObj = categories.find((c) => c.slug === selectedCategory);
   const categoryTitle = activeCategoryObj ? activeCategoryObj.name : 'All Spices, Pickles & Blends';
 
   return (
-    <div className="bg-[#FFFBF5] min-h-screen py-8">
+    <div className="bg-[#FFFBF5] min-h-screen py-8 text-left">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <Breadcrumb items={[{ label: 'Shop Catalogue' }]} />
 
@@ -70,18 +82,18 @@ export const Shop = () => {
 
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-[#9A6428] bg-[#9A6428]/15 px-3 py-1.5 rounded-full">
-              {filteredProducts.length} Products
+              {products.length} Products
             </span>
           </div>
         </div>
 
-        {/* 3 Main Category Tabs Bar (Without Search Box) */}
+        {/* 3 Main Category Tabs Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#FFFBF5] p-3 rounded-2xl border border-[#E8DDCF] shadow-xs">
           {/* Category Tabs */}
           <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
             <button
               onClick={() => handleCategoryChange('all')}
-              className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+              className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                 selectedCategory === 'all'
                   ? 'bg-[#9A6428] text-white shadow-xs'
                   : 'bg-white text-[#171717] border border-[#E8DDCF] hover:bg-[#F9EFDD]/60'
@@ -95,7 +107,7 @@ export const Shop = () => {
               <button
                 key={cat.id}
                 onClick={() => handleCategoryChange(cat.slug)}
-                className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
+                className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
                   selectedCategory === cat.slug
                     ? 'bg-[#9A6428] text-white shadow-xs'
                     : 'bg-white text-[#171717] border border-[#E8DDCF] hover:bg-[#F9EFDD]/60'
@@ -126,11 +138,36 @@ export const Shop = () => {
         </div>
 
         {/* Product Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {isLoading ? (
+          <ProductGridSkeleton count={8} />
+        ) : error ? (
+          <div className="py-12 bg-white rounded-2xl border border-[#E8DDCF] text-center space-y-3">
+            <p className="text-sm text-red-600 font-bold">{error}</p>
+            <button
+              onClick={loadProducts}
+              className="px-4 py-2 rounded-xl bg-[#9A6428] text-white text-xs font-bold flex items-center gap-1.5 mx-auto cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Retry Loading</span>
+            </button>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="py-16 bg-white rounded-2xl border border-[#E8DDCF] text-center space-y-3">
+            <p className="text-base font-bold text-[#5E3718]">No products available in this category.</p>
+            <button
+              onClick={() => handleCategoryChange('all')}
+              className="px-4 py-2 rounded-xl bg-[#9A6428] text-white text-xs font-bold cursor-pointer"
+            >
+              View All Products
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {products.map((product) => (
+              <ProductCard key={product._id || product.id} product={product} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
