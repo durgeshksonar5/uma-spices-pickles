@@ -24,6 +24,7 @@ const Contact = lazy(() => import('./pages/Contact'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Admin pages
+const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminProductsList = lazy(() => import('./pages/admin/AdminProductsList'));
 const ProductForm = lazy(() => import('./pages/admin/ProductForm'));
@@ -43,7 +44,10 @@ export const App = () => {
               }
             >
               <Routes>
-                {/* Unified Admin Route (/admin) - Shows login if unauthenticated, Admin Dashboard if authenticated */}
+                {/* Admin Unprotected Login */}
+                <Route path="/admin/login" element={<AdminLogin />} />
+
+                {/* Admin Protected Routes */}
                 <Route element={<ProtectedRoute />}>
                   <Route element={<AdminLayout />}>
                     <Route path="/admin" element={<AdminDashboard />} />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { businessConfig } from '../../config/businessConfig';
@@ -11,8 +11,14 @@ export const AdminLogin = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { login } = useAuth();
+  const { isAuthenticated, login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/admin', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,7 +27,9 @@ export const AdminLogin = () => {
 
     try {
       await login(email, password);
-      navigate('/admin');
+      setTimeout(() => {
+        navigate('/admin', { replace: true });
+      }, 50);
     } catch (err) {
       setError(err.message || 'Invalid admin credentials');
     } finally {
@@ -108,7 +116,7 @@ export const AdminLogin = () => {
                 <Lock className="w-4 h-4" />
               </div>
               <input
-                type={showPassword ? 'text' : 'password'}
+                type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

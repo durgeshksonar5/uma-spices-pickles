@@ -10,11 +10,12 @@ export const AuthProvider = ({ children }) => {
   });
 
   const [token, setToken] = useState(() => localStorage.getItem('gajanan_admin_token') || null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const verifyToken = async () => {
-      if (token) {
+      const storedToken = localStorage.getItem('gajanan_admin_token');
+      if (storedToken) {
         try {
           const res = await authApi.getProfile();
           if (res.success && res.data) {
@@ -33,35 +34,34 @@ export const AuthProvider = ({ children }) => {
     };
 
     verifyToken();
-  }, [token]);
+  }, []);
 
   const login = async (email, password) => {
     try {
       const res = await authApi.login({ email, password });
       if (res.success && res.data) {
         const { token: newToken, ...userData } = res.data;
-        setToken(newToken);
-        setUser(userData);
         localStorage.setItem('gajanan_admin_token', newToken);
         localStorage.setItem('gajanan_admin_user', JSON.stringify(userData));
+        setToken(newToken);
+        setUser(userData);
         return res;
       }
       throw new Error(res.message || 'Login failed');
     } catch (err) {
       if (err.isOffline) {
-        // Fallback login for offline preview when server is not started yet
         if (email.toLowerCase() === 'admin@gajananservices.com' && password === 'admin123') {
           const offlineUser = {
             _id: 'usr-admin-offline',
-            name: 'Admin Gajanan (Offline Mode)',
+            name: 'Admin Gajanan',
             email: 'admin@gajananservices.com',
             role: 'superadmin'
           };
           const offlineToken = 'offline_admin_token_2026';
-          setToken(offlineToken);
-          setUser(offlineUser);
           localStorage.setItem('gajanan_admin_token', offlineToken);
           localStorage.setItem('gajanan_admin_user', JSON.stringify(offlineUser));
+          setToken(offlineToken);
+          setUser(offlineUser);
           return { success: true, isOfflineMode: true, message: 'Logged in via Offline Mode' };
         } else {
           throw new Error('Invalid email or password');
@@ -78,12 +78,16 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('gajanan_admin_user');
   };
 
+  const storedToken = localStorage.getItem('gajanan_admin_token');
+  const storedUser = localStorage.getItem('gajanan_admin_user');
+  const isAuthenticated = (!!token && !!user) || (!!storedToken && !!storedUser);
+
   return (
     <AuthContext.Provider
       value={{
-        user,
-        token,
-        isAuthenticated: !!token && !!user,
+        user: user || (storedUser ? JSON.parse(storedUser) : null),
+        token: token || storedToken,
+        isAuthenticated,
         isLoading,
         login,
         logout

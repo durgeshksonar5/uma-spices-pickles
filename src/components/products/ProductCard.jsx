@@ -5,20 +5,40 @@ import { useCart } from '../../context/CartContext';
 import { formatCurrency } from '../../utils/currency';
 import { businessConfig } from '../../config/businessConfig';
 
+const DEFAULT_FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=800';
+
+const extractImageUrl = (product) => {
+  if (!product) return DEFAULT_FALLBACK_IMAGE;
+
+  if (Array.isArray(product.images) && product.images.length > 0) {
+    const primary = product.images.find((img) => img && typeof img === 'object' && img.isPrimary);
+    const target = primary || product.images[0];
+
+    if (typeof target === 'string' && target.trim()) return target;
+    if (target && typeof target === 'object' && target.url) return target.url;
+  }
+
+  if (typeof product.image === 'string' && product.image.trim()) {
+    return product.image;
+  }
+
+  return DEFAULT_FALLBACK_IMAGE;
+};
+
 export const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
   const [isAdded, setIsAdded] = useState(false);
+  const [imgSrc, setImgSrc] = useState(() => extractImageUrl(product));
 
   // Default size selection
   const defaultSize = product.availableSizes && product.availableSizes.length > 0
     ? product.availableSizes[0]
-    : { size: 'Pack', price: product.price };
+    : { size: 'Pack', price: product.price || product.basePrice || 0 };
 
   const handleAddToCartAndWhatsApp = (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    // 1. Add to Cart context
     addToCart(product, defaultSize, 1);
 
     setIsAdded(true);
@@ -26,24 +46,24 @@ export const ProductCard = ({ product }) => {
       setIsAdded(false);
     }, 1800);
 
-    // 2. Direct Redirect to WhatsApp (+91 78756 12000)
     const cleanNumber = businessConfig.whatsAppNumber.replace(/\D/g, '');
     const message = `Hello ${businessConfig.brandName},\n\nI would like to order:\n\nProduct: ${product.name}\nSize: ${defaultSize.size}\nPrice: ${formatCurrency(defaultSize.price)}\n\nPlease confirm product availability and delivery details.`;
     const waUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
-    
+
     window.open(waUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
     <div className="bg-[#FFFBF5] rounded-2xl border border-[#E8DDCF] p-3.5 sm:p-4 flex flex-col justify-between hover:shadow-lg transition-all duration-300 group">
       <div>
-        {/* Rectangle Image Container - Edge to Edge Object Cover */}
+        {/* Rectangle Image Container */}
         <div className="relative w-full h-44 sm:h-52 rounded-xl overflow-hidden bg-[#F9EFDD]/50 mb-3 border border-[#E8DDCF]">
           <Link to={`/product/${product.slug}`} className="block w-full h-full">
             <img
-              src={product.images[0]}
+              src={imgSrc}
               alt={product.name}
               loading="lazy"
+              onError={() => setImgSrc(DEFAULT_FALLBACK_IMAGE)}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
           </Link>
@@ -64,9 +84,9 @@ export const ProductCard = ({ product }) => {
           {/* Price */}
           <div className="pt-1 flex items-baseline gap-2">
             <span className="font-sans font-bold text-base sm:text-lg text-[#171717]">
-              {formatCurrency(product.price)}
+              {formatCurrency(product.price || product.basePrice)}
             </span>
-            {product.originalPrice && product.originalPrice > product.price && (
+            {product.originalPrice && product.originalPrice > (product.price || product.basePrice) && (
               <span className="text-xs text-[#777166] line-through">
                 {formatCurrency(product.originalPrice)}
               </span>
@@ -100,3 +120,5 @@ export const ProductCard = ({ product }) => {
     </div>
   );
 };
+
+export default ProductCard;

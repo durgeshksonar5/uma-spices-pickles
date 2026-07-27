@@ -8,13 +8,11 @@ import {
   Plus,
   Trash2,
   Check,
-  Star,
   Package,
   Layers,
   DollarSign,
   Image as ImageIcon,
-  Sparkles,
-  Info
+  AlertTriangle
 } from 'lucide-react';
 
 export const ProductForm = () => {
@@ -25,6 +23,8 @@ export const ProductForm = () => {
 
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [errors, setErrors] = useState({});
 
   // Form State
@@ -129,7 +129,6 @@ export const ProductForm = () => {
       [name]: type === 'checkbox' ? checked : value
     }));
 
-    // Auto-generate slug from name if adding
     if (name === 'name' && !isEditMode) {
       const generatedSlug = value
         .toLowerCase()
@@ -140,7 +139,6 @@ export const ProductForm = () => {
     }
   };
 
-  // Add / Remove Sizes
   const handleAddSize = () => {
     setSizes((prev) => [...prev, { label: '', price: '', stock: 20 }]);
   };
@@ -155,7 +153,6 @@ export const ProductForm = () => {
     );
   };
 
-  // Add / Remove Weights
   const handleAddWeight = () => {
     setWeights((prev) => [...prev, { label: '', value: '', unit: 'g', price: '', stock: 20 }]);
   };
@@ -179,7 +176,6 @@ export const ProductForm = () => {
     );
   };
 
-  // Handle File Upload Select
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -236,7 +232,6 @@ export const ProductForm = () => {
     }
   };
 
-  // Form Validation
   const validateForm = () => {
     const newErrors = {};
 
@@ -244,15 +239,11 @@ export const ProductForm = () => {
     if (!formData.basePrice || Number(formData.basePrice) < 0) {
       newErrors.basePrice = 'Base price must be a valid non-negative number';
     }
-    if (formData.salePrice && Number(formData.salePrice) < 0) {
-      newErrors.salePrice = 'Sale price cannot be negative';
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Form Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -270,18 +261,14 @@ export const ProductForm = () => {
         dataPayload.append(key, formData[key]);
       });
 
-      // Filter and append sizes
       const validSizes = sizes.filter((s) => s.label && s.price !== '');
       dataPayload.append('sizes', JSON.stringify(validSizes));
 
-      // Filter and append weights
       const validWeights = weights.filter((w) => w.price !== '');
       dataPayload.append('weights', JSON.stringify(validWeights));
 
-      // Append existing images JSON
       dataPayload.append('images', JSON.stringify(existingImages));
 
-      // Append newly selected image files
       newImageFiles.forEach((file) => {
         dataPayload.append('imageFiles', file);
       });
@@ -304,6 +291,23 @@ export const ProductForm = () => {
       showToast(err.message || 'Operation failed. Please try again.', 'error');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteProduct = async () => {
+    if (!id) return;
+    setIsDeleting(true);
+    try {
+      const res = await productApi.deleteProduct(id);
+      if (res.success) {
+        showToast('Product deleted successfully!', 'success');
+        navigate('/admin/products');
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to delete product', 'error');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -330,13 +334,26 @@ export const ProductForm = () => {
       </div>
 
       <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E8DDCF] shadow-sm space-y-6">
-        <div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#5E3718]">
-            {isEditMode ? 'Edit Product' : 'Add New Product'}
-          </h1>
-          <p className="text-xs sm:text-sm text-[#777166] mt-0.5">
-            Fill in the details below to publish or update products in the Shop catalog.
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#5E3718]">
+              {isEditMode ? 'Edit Product' : 'Add New Product'}
+            </h1>
+            <p className="text-xs sm:text-sm text-[#777166] mt-0.5">
+              Fill in the details below to publish or update products in the Shop catalog.
+            </p>
+          </div>
+
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteModal(true)}
+              className="px-4 py-2 rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-600 hover:text-white font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Delete Product</span>
+            </button>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -348,7 +365,6 @@ export const ProductForm = () => {
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Product Name */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
                   Product Name *
@@ -365,7 +381,6 @@ export const ProductForm = () => {
                 {errors.name && <p className="text-xs text-red-600 font-bold">{errors.name}</p>}
               </div>
 
-              {/* Slug */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
                   URL Slug (Auto-generated)
@@ -380,7 +395,6 @@ export const ProductForm = () => {
                 />
               </div>
 
-              {/* Category */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
                   Category *
@@ -397,7 +411,6 @@ export const ProductForm = () => {
                 </select>
               </div>
 
-              {/* SKU */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
                   SKU Code
@@ -413,7 +426,6 @@ export const ProductForm = () => {
               </div>
             </div>
 
-            {/* Short & Full Descriptions */}
             <div className="space-y-4">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
@@ -453,7 +465,6 @@ export const ProductForm = () => {
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* Base Price */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
                   Base Price (₹) *
@@ -471,7 +482,6 @@ export const ProductForm = () => {
                 {errors.basePrice && <p className="text-xs text-red-600 font-bold">{errors.basePrice}</p>}
               </div>
 
-              {/* Sale Price */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
                   Sale Price (₹) (Optional)
@@ -487,7 +497,6 @@ export const ProductForm = () => {
                 />
               </div>
 
-              {/* Stock */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
                   General Stock Units
@@ -504,7 +513,6 @@ export const ProductForm = () => {
               </div>
             </div>
 
-            {/* Status & Toggles */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
@@ -560,7 +568,6 @@ export const ProductForm = () => {
               <span>3. Product Size & Weight Variants (Optional)</span>
             </h3>
 
-            {/* Size Variants Table */}
             <div className="space-y-3 bg-[#F9EFDD]/40 p-4 rounded-2xl border border-[#E8DDCF]">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-[#5E3718] uppercase tracking-wider block">
@@ -616,7 +623,6 @@ export const ProductForm = () => {
               )}
             </div>
 
-            {/* Weight Variants Table */}
             <div className="space-y-3 bg-[#F9EFDD]/40 p-4 rounded-2xl border border-[#E8DDCF]">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-[#5E3718] uppercase tracking-wider block">
@@ -683,7 +689,6 @@ export const ProductForm = () => {
               <span>4. Product Images</span>
             </h3>
 
-            {/* Upload Area */}
             <div className="border-2 border-dashed border-[#9A6428]/40 rounded-2xl p-6 bg-[#F9EFDD]/30 text-center hover:bg-[#F9EFDD]/60 transition-colors">
               <Upload className="w-8 h-8 text-[#9A6428] mx-auto mb-2" />
               <p className="text-xs font-bold text-[#171717]">
@@ -698,7 +703,6 @@ export const ProductForm = () => {
               />
             </div>
 
-            {/* External URL Input Option */}
             <div className="flex items-center gap-2">
               <input
                 type="text"
@@ -716,9 +720,7 @@ export const ProductForm = () => {
               </button>
             </div>
 
-            {/* Image Previews Container */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
-              {/* Existing Images */}
               {existingImages.map((img, idx) => (
                 <div
                   key={`existing-${idx}`}
@@ -748,7 +750,6 @@ export const ProductForm = () => {
                 </div>
               ))}
 
-              {/* Newly Selected Upload Previews */}
               {newImagePreviews.map((src, idx) => (
                 <div
                   key={`new-${idx}`}
@@ -771,34 +772,85 @@ export const ProductForm = () => {
           </div>
 
           {/* Submit Action Buttons */}
-          <div className="pt-6 border-t border-[#E8DDCF] flex items-center justify-end gap-3">
-            <Link
-              to="/admin/products"
-              className="px-6 py-3 rounded-xl bg-[#F9EFDD] text-[#5E3718] font-bold text-sm hover:bg-[#E8DDCF] transition-colors"
-            >
-              Cancel
-            </Link>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-8 py-3 rounded-xl bg-[#9A6428] hover:bg-[#80511D] disabled:opacity-50 text-white font-bold text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer"
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                  <span>Saving Product...</span>
-                </>
-              ) : (
-                <>
-                  <Check className="w-4 h-4" />
-                  <span>{isEditMode ? 'Update Product' : 'Save & Publish Product'}</span>
-                </>
+          <div className="pt-6 border-t border-[#E8DDCF] flex items-center justify-between gap-3">
+            <div>
+              {isEditMode && (
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="px-4 py-3 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer border border-red-200"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Delete Product</span>
+                </button>
               )}
-            </button>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Link
+                to="/admin/products"
+                className="px-6 py-3 rounded-xl bg-[#F9EFDD] text-[#5E3718] font-bold text-sm hover:bg-[#E8DDCF] transition-colors"
+              >
+                Cancel
+              </Link>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-8 py-3 rounded-xl bg-[#9A6428] hover:bg-[#80511D] disabled:opacity-50 text-white font-bold text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer"
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span>Saving Product...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>{isEditMode ? 'Update Product' : 'Save & Publish Product'}</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-[#E8DDCF] p-6 max-w-md w-full shadow-2xl space-y-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 mx-auto flex items-center justify-center">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <h3 className="font-serif text-xl font-bold text-[#5E3718]">
+              Delete Product?
+            </h3>
+            <p className="text-xs text-[#777166]">
+              Are you sure you want to permanently delete <strong>"{formData.name}"</strong>?
+              This action will remove the product and its uploaded images from your store.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-[#F9EFDD] text-[#5E3718] hover:bg-[#E8DDCF] transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleDeleteProduct}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Permanently'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

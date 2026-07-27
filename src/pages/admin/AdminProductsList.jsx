@@ -12,8 +12,7 @@ import {
   Eye,
   EyeOff,
   RefreshCw,
-  AlertTriangle,
-  CheckCircle2
+  AlertTriangle
 } from 'lucide-react';
 
 export const AdminProductsList = () => {
@@ -76,18 +75,24 @@ export const AdminProductsList = () => {
     }
   };
 
-  // Confirm Delete
+  // Instant Delete Confirm with Optimistic State Update
   const handleDeleteConfirm = async () => {
     if (!deleteProductTarget) return;
+    const targetId = deleteProductTarget._id || deleteProductTarget.id;
+    const targetName = deleteProductTarget.name;
+
     setIsDeleting(true);
+    // Instant optimistic update on UI
+    setProducts((prev) => prev.filter((p) => (p._id || p.id) !== targetId));
+
     try {
-      const res = await productApi.deleteProduct(deleteProductTarget._id || deleteProductTarget.id);
+      const res = await productApi.deleteProduct(targetId);
       if (res.success) {
-        showToast('Product deleted successfully', 'success');
-        setProducts((prev) => prev.filter((p) => (p._id || p.id) !== (deleteProductTarget._id || deleteProductTarget.id)));
+        showToast(`"${targetName}" deleted successfully!`, 'success');
       }
     } catch (err) {
       showToast(err.message || 'Failed to delete product', 'error');
+      fetchProducts();
     } finally {
       setIsDeleting(false);
       setDeleteProductTarget(null);
@@ -103,7 +108,7 @@ export const AdminProductsList = () => {
             Product Management
           </h1>
           <p className="text-xs sm:text-sm text-[#777166] mt-0.5">
-            Add, edit, publish, unpublish, and organize your product catalog.
+            Add, edit, publish, unpublish, and delete products from your catalog.
           </p>
         </div>
 
@@ -142,7 +147,6 @@ export const AdminProductsList = () => {
 
         {/* Dropdown Filters */}
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          {/* Category Filter */}
           <div className="flex items-center gap-1.5 bg-[#FFFBF5] px-3 py-1.5 rounded-xl border border-[#E8DDCF]">
             <Filter className="w-3.5 h-3.5 text-[#9A6428]" />
             <select
@@ -157,7 +161,6 @@ export const AdminProductsList = () => {
             </select>
           </div>
 
-          {/* Status Filter */}
           <div className="flex items-center gap-1.5 bg-[#FFFBF5] px-3 py-1.5 rounded-xl border border-[#E8DDCF]">
             <select
               value={statusFilter}
@@ -255,7 +258,6 @@ export const AdminProductsList = () => {
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {/* Toggle Status Button */}
                           <button
                             onClick={() => handleToggleStatus(p)}
                             title={p.status === 'published' ? 'Unpublish (Make Draft)' : 'Publish to Shop'}
@@ -268,22 +270,21 @@ export const AdminProductsList = () => {
                             {p.status === 'published' ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                           </button>
 
-                          {/* Edit Button */}
                           <Link
                             to={`/admin/products/edit/${p._id || p.id}`}
-                            className="p-2 rounded-lg bg-[#F9EFDD] text-[#5E3718] border border-[#E8DDCF] hover:bg-[#9A6428] hover:text-white transition-colors"
+                            className="p-2 rounded-lg bg-[#F9EFDD] text-[#5E3718] border border-[#E8DDCF] hover:bg-[#9A6428] hover:text-white transition-colors flex items-center justify-center"
                             title="Edit Product"
                           >
                             <Edit className="w-3.5 h-3.5" />
                           </Link>
 
-                          {/* Delete Button */}
                           <button
                             onClick={() => setDeleteProductTarget(p)}
-                            className="p-2 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-600 hover:text-white transition-colors cursor-pointer"
+                            className="px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-[11px] transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
                             title="Delete Product"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete</span>
                           </button>
                         </div>
                       </td>
@@ -309,7 +310,7 @@ export const AdminProductsList = () => {
             </h3>
             <p className="text-xs text-[#777166]">
               Are you sure you want to permanently delete <strong>"{deleteProductTarget.name}"</strong>?
-              This action cannot be undone and will remove the product and its uploaded images from the server.
+              This action cannot be undone and will remove the product from your catalog and website.
             </p>
 
             <div className="flex items-center justify-end gap-3 pt-2">

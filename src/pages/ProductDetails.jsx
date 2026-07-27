@@ -6,15 +6,33 @@ import { Breadcrumb } from '../components/common/Breadcrumb';
 import { ProductCard } from '../components/products/ProductCard';
 import { WhatsAppCheckoutForm } from '../components/cart/WhatsAppCheckoutForm';
 import { formatCurrency } from '../utils/currency';
-import { businessConfig } from '../config/businessConfig';
 import {
   MessageCircle,
   Minus,
   Plus,
   ChevronDown,
-  Star,
-  RefreshCw
+  Star
 } from 'lucide-react';
+
+const DEFAULT_FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=800';
+
+const extractProductImage = (prod) => {
+  if (!prod) return DEFAULT_FALLBACK_IMAGE;
+
+  if (Array.isArray(prod.images) && prod.images.length > 0) {
+    const primary = prod.images.find((img) => img && typeof img === 'object' && img.isPrimary);
+    const target = primary || prod.images[0];
+
+    if (typeof target === 'string' && target.trim()) return target;
+    if (target && typeof target === 'object' && target.url) return target.url;
+  }
+
+  if (typeof prod.image === 'string' && prod.image.trim()) {
+    return prod.image;
+  }
+
+  return DEFAULT_FALLBACK_IMAGE;
+};
 
 export const ProductDetails = () => {
   const { slug } = useParams();
@@ -24,12 +42,12 @@ export const ProductDetails = () => {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [mainImageUrl, setMainImageUrl] = useState(DEFAULT_FALLBACK_IMAGE);
 
   const [selectedSizeIndex, setSelectedSizeIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isDirectCheckoutOpen, setIsDirectCheckoutOpen] = useState(false);
 
-  // Accordion state
   const [openAccordions, setOpenAccordions] = useState({
     details: true,
     ingredients: false,
@@ -49,17 +67,18 @@ export const ProductDetails = () => {
       try {
         const res = await productApi.getProductBySlug(slug);
         if (res.success && res.data) {
-          setProduct(res.data);
+          const p = res.data;
+          setProduct(p);
           setSelectedSizeIndex(0);
+          setMainImageUrl(extractProductImage(p));
 
-          // Fetch related products
           const relRes = await productApi.getProducts({
-            category: res.data.category,
+            category: p.category,
             limit: 4,
             status: 'published'
           });
           if (relRes.success && relRes.data) {
-            setRelatedProducts(relRes.data.filter((p) => p.slug !== slug).slice(0, 4));
+            setRelatedProducts(relRes.data.filter((item) => item.slug !== slug).slice(0, 4));
           }
         }
       } catch (err) {
@@ -97,7 +116,6 @@ export const ProductDetails = () => {
     );
   }
 
-  // Calculate sizes list
   const sizesList =
     product.availableSizes && product.availableSizes.length > 0
       ? product.availableSizes
@@ -112,15 +130,9 @@ export const ProductDetails = () => {
     setIsDirectCheckoutOpen(true);
   };
 
-  const mainImageUrl =
-    product.images && product.images.length > 0
-      ? product.images[0].url
-      : 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=800';
-
   return (
     <div className="bg-[#FFFBF5] min-h-screen py-8 text-left">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Breadcrumb Navigation */}
         <Breadcrumb
           items={[
             { label: 'Shop', link: '/shop' },
@@ -128,21 +140,21 @@ export const ProductDetails = () => {
           ]}
         />
 
-        {/* Main Product Container */}
         <div className="bg-[#FFFBF5] rounded-2xl border border-[#E8DDCF] p-6 sm:p-10 shadow-xs mb-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left Image Gallery */}
+            {/* Left Image */}
             <div className="lg:col-span-6 space-y-4">
               <div className="relative h-80 sm:h-96 w-full rounded-xl overflow-hidden bg-white border border-[#E8DDCF] shadow-xs">
                 <img
                   src={mainImageUrl}
                   alt={product.name}
+                  onError={() => setMainImageUrl(DEFAULT_FALLBACK_IMAGE)}
                   className="w-full h-full object-contain p-4"
                 />
               </div>
             </div>
 
-            {/* Right Product Details & Actions */}
+            {/* Right Details */}
             <div className="lg:col-span-6 space-y-5">
               <div className="space-y-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#9A6428] bg-[#F9EFDD] px-3 py-1 rounded-full inline-block">
@@ -153,7 +165,6 @@ export const ProductDetails = () => {
                   {product.name}
                 </h1>
 
-                {/* Rating & Review */}
                 <div className="flex items-center gap-2 text-xs pt-1">
                   <div className="flex items-center text-[#E9A900]">
                     {[...Array(5)].map((_, i) => (
@@ -168,7 +179,6 @@ export const ProductDetails = () => {
                   </span>
                 </div>
 
-                {/* Live Price updating based on selected size */}
                 <div className="pt-2 flex items-baseline gap-3">
                   <span className="font-sans font-bold text-3xl text-[#171717]">
                     {formatCurrency(currentSize.price)}
@@ -234,7 +244,7 @@ export const ProductDetails = () => {
                 </div>
               </div>
 
-              {/* Single WhatsApp Order Button */}
+              {/* WhatsApp Button */}
               <div className="pt-4 border-t border-[#E8DDCF]">
                 <button
                   onClick={handleDirectWhatsAppOrder}
@@ -248,13 +258,12 @@ export const ProductDetails = () => {
           </div>
         </div>
 
-        {/* 5 Required Accordions */}
+        {/* Accordions */}
         <div className="bg-[#FFFBF5] rounded-2xl border border-[#E8DDCF] p-6 sm:p-8 shadow-xs mb-12 space-y-3">
           <h3 className="font-serif font-bold text-2xl text-[#5E3718] mb-4">
             Product & Order Details
           </h3>
 
-          {/* 1. Product Details */}
           <div className="border border-[#E8DDCF] rounded-xl overflow-hidden bg-white">
             <button
               onClick={() => toggleAccordion('details')}
@@ -266,17 +275,12 @@ export const ProductDetails = () => {
             {openAccordions.details && (
               <div className="p-4 text-xs sm:text-sm text-[#777166] leading-relaxed border-t border-[#E8DDCF] space-y-2">
                 <p>{product.description || product.shortDescription}</p>
-                {product.sku && (
-                  <p><strong>SKU:</strong> {product.sku}</p>
-                )}
-                {product.brand && (
-                  <p><strong>Brand:</strong> {product.brand}</p>
-                )}
+                {product.sku && <p><strong>SKU:</strong> {product.sku}</p>}
+                {product.brand && <p><strong>Brand:</strong> {product.brand}</p>}
               </div>
             )}
           </div>
 
-          {/* 2. Ingredients */}
           <div className="border border-[#E8DDCF] rounded-xl overflow-hidden bg-white">
             <button
               onClick={() => toggleAccordion('ingredients')}
@@ -287,57 +291,7 @@ export const ProductDetails = () => {
             </button>
             {openAccordions.ingredients && (
               <div className="p-4 text-xs sm:text-sm text-[#777166] leading-relaxed border-t border-[#E8DDCF]">
-                {product.ingredients || '100% natural, pure raw ingredients without artificial flavors or synthetic colors.'}
-              </div>
-            )}
-          </div>
-
-          {/* 3. How to Use */}
-          <div className="border border-[#E8DDCF] rounded-xl overflow-hidden bg-white">
-            <button
-              onClick={() => toggleAccordion('howToUse')}
-              className="w-full p-4 text-left font-bold text-sm text-[#171717] flex items-center justify-between bg-[#F9EFDD]/50 cursor-pointer"
-            >
-              <span>How to Use</span>
-              <ChevronDown className={`w-4 h-4 transition-transform ${openAccordions.howToUse ? 'rotate-180' : ''}`} />
-            </button>
-            {openAccordions.howToUse && (
-              <div className="p-4 text-xs sm:text-sm text-[#777166] leading-relaxed border-t border-[#E8DDCF]">
-                Add to your daily curries, gravies, or serve alongside hot rice, parathas and snacks for authentic flavor.
-              </div>
-            )}
-          </div>
-
-          {/* 4. Storage Instructions */}
-          <div className="border border-[#E8DDCF] rounded-xl overflow-hidden bg-white">
-            <button
-              onClick={() => toggleAccordion('storage')}
-              className="w-full p-4 text-left font-bold text-sm text-[#171717] flex items-center justify-between bg-[#F9EFDD]/50 cursor-pointer"
-            >
-              <span>Storage Instructions</span>
-              <ChevronDown className={`w-4 h-4 transition-transform ${openAccordions.storage ? 'rotate-180' : ''}`} />
-            </button>
-            {openAccordions.storage && (
-              <div className="p-4 text-xs sm:text-sm text-[#777166] leading-relaxed border-t border-[#E8DDCF] space-y-1">
-                <p>{product.storageInstructions || 'Store in an airtight container in a cool, dry place away from direct sunlight.'}</p>
-                <p><strong>Shelf Life:</strong> {product.shelfLife || '12 Months'}</p>
-              </div>
-            )}
-          </div>
-
-          {/* 5. Delivery Information */}
-          <div className="border border-[#E8DDCF] rounded-xl overflow-hidden bg-white">
-            <button
-              onClick={() => toggleAccordion('delivery')}
-              className="w-full p-4 text-left font-bold text-sm text-[#171717] flex items-center justify-between bg-[#F9EFDD]/50 cursor-pointer"
-            >
-              <span>Delivery Information</span>
-              <ChevronDown className={`w-4 h-4 transition-transform ${openAccordions.delivery ? 'rotate-180' : ''}`} />
-            </button>
-            {openAccordions.delivery && (
-              <div className="p-4 text-xs sm:text-sm text-[#777166] leading-relaxed border-t border-[#E8DDCF] space-y-1">
-                <p>All items are freshly packed in hygienic food-grade jars/pouches.</p>
-                <p>Delivery charges and exact timeline will be confirmed on WhatsApp based on your city and PIN code.</p>
+                {product.ingredients || '100% natural raw ingredients.'}
               </div>
             )}
           </div>
@@ -358,7 +312,6 @@ export const ProductDetails = () => {
         )}
       </div>
 
-      {/* WhatsApp Delivery Validation Modal */}
       <WhatsAppCheckoutForm
         isOpen={isDirectCheckoutOpen}
         onClose={() => setIsDirectCheckoutOpen(false)}

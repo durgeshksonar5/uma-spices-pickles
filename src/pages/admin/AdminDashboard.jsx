@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { productApi } from '../../api/productApi';
 import { formatCurrency } from '../../utils/currency';
+import { useToast } from '../../context/ToastContext';
 import {
   Package,
   CheckCircle2,
@@ -10,8 +11,9 @@ import {
   PlusCircle,
   ArrowRight,
   RefreshCw,
-  Store,
-  Sparkles
+  Sparkles,
+  Trash2,
+  Edit
 } from 'lucide-react';
 
 export const AdminDashboard = () => {
@@ -23,6 +25,12 @@ export const AdminDashboard = () => {
   });
   const [recentProducts, setRecentProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Delete product state
+  const [deleteProductTarget, setDeleteProductTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { showToast } = useToast();
 
   const fetchDashboardData = async () => {
     setIsLoading(true);
@@ -36,7 +44,7 @@ export const AdminDashboard = () => {
           draft: prods.filter((p) => p.status === 'draft').length,
           outOfStock: prods.filter((p) => p.status === 'out-of-stock' || p.stock === 0).length
         });
-        setRecentProducts(prods.slice(0, 6));
+        setRecentProducts(prods.slice(0, 8));
       }
     } catch (err) {
       console.error('Failed to load dashboard statistics:', err);
@@ -49,8 +57,41 @@ export const AdminDashboard = () => {
     fetchDashboardData();
   }, []);
 
+  const handleDeleteConfirm = async () => {
+    if (!deleteProductTarget) return;
+    const targetId = deleteProductTarget._id || deleteProductTarget.id;
+    const targetName = deleteProductTarget.name;
+    const targetStatus = deleteProductTarget.status;
+
+    setIsDeleting(true);
+
+    // Instant optimistic update on UI
+    setRecentProducts((prev) => prev.filter((p) => (p._id || p.id) !== targetId));
+    setStats((prev) => ({
+      ...prev,
+      total: Math.max(0, prev.total - 1),
+      published: targetStatus === 'published' ? Math.max(0, prev.published - 1) : prev.published,
+      draft: targetStatus === 'draft' ? Math.max(0, prev.draft - 1) : prev.draft,
+      outOfStock: targetStatus === 'out-of-stock' ? Math.max(0, prev.outOfStock - 1) : prev.outOfStock
+    }));
+
+    try {
+      const res = await productApi.deleteProduct(targetId);
+      if (res.success) {
+        showToast(`"${targetName}" deleted successfully!`, 'success');
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to delete product', 'error');
+      // Re-fetch to sync if network failed
+      fetchDashboardData();
+    } finally {
+      setIsDeleting(false);
+      setDeleteProductTarget(null);
+    }
+  };
+
   return (
-    <div className="space-y-8 text-left">
+    <div className="space-y-8 text-left font-sans">
       {/* Header Row */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-[#E8DDCF] shadow-xs">
         <div>
@@ -185,7 +226,7 @@ export const AdminDashboard = () => {
                 <th className="py-3 px-4">Category</th>
                 <th className="py-3 px-4">Base Price</th>
                 <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-right">Action</th>
+                <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E8DDCF]">
@@ -236,12 +277,26 @@ export const AdminDashboard = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <Link
-                          to={`/admin/products/edit/${p._id || p.id}`}
-                          className="px-3 py-1 rounded-lg bg-[#9A6428] text-white text-[11px] font-bold hover:bg-[#80511D] transition-colors"
-                        >
-                          Edit
-                        </Link>
+                        <div className="flex items-center justify-end gap-2">
+                          {/* Edit Button */}
+                          <Link
+                            to={`/admin/products/edit/${p._id || p.id}`}
+                            className="px-3 py-1.5 rounded-lg bg-[#9A6428] text-white text-[11px] font-bold hover:bg-[#80511D] transition-colors flex items-center gap-1"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                            <span>Edit</span>
+                          </Link>
+
+                          {/* Delete Button */}
+                          <button
+                            onClick={() => setDeleteProductTarget(p)}
+                            className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-[11px] transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
+                            title="Delete Product"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -251,6 +306,42 @@ export const AdminDashboard = () => {
           </table>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteProductTarget && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-[#E8DDCF] p-6 max-w-md w-full shadow-2xl space-y-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 mx-auto flex items-center justify-center">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <h3 className="font-serif text-xl font-bold text-[#5E3718]">
+              Delete Product?
+            </h3>
+            <p className="text-xs text-[#777166]">
+              Are you sure you want to permanently delete <strong>"{deleteProductTarget.name}"</strong>?
+              This action will immediately remove the product from your catalog and website.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setDeleteProductTarget(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-[#F9EFDD] text-[#5E3718] hover:bg-[#E8DDCF] transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Permanently'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

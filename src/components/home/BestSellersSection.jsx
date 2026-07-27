@@ -1,12 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { products } from '../../data/products';
+import { productApi } from '../../api/productApi';
 import { ProductCard } from '../products/ProductCard';
 
 export const BestSellersSection = () => {
-  // Select top 4 bestsellers for a relaxed, spacious 4-in-a-row grid
-  const bestSellers = products.filter((p) => p.bestSeller).slice(0, 4);
+  const [bestSellers, setBestSellers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadBestSellers = async () => {
+      setIsLoading(true);
+      try {
+        const res = await productApi.getProducts({ status: 'published', limit: 12 });
+        if (res.success && res.data) {
+          // Select products tagged as best seller or top items
+          const filtered = res.data.filter((p) => p.bestSeller || p.isFeatured).slice(0, 4);
+          setBestSellers(filtered.length > 0 ? filtered : res.data.slice(0, 4));
+        }
+      } catch (err) {
+        console.error('Failed to load best seller products:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadBestSellers();
+  }, []);
 
   return (
     <section className="py-16 bg-[#FFFBF5] border-b border-[#E8DDCF]/80">
@@ -28,11 +48,19 @@ export const BestSellersSection = () => {
         </div>
 
         {/* Product Cards Grid: Exactly 4 relaxed boxes in a row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {bestSellers.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-64 bg-[#F9EFDD]/40 rounded-2xl animate-pulse"></div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {bestSellers.map((product) => (
+              <ProductCard key={product._id || product.id} product={product} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
