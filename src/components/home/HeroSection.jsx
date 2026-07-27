@@ -1,38 +1,69 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Leaf, Award, Utensils, Sparkles } from 'lucide-react';
+import { settingsApi } from '../../api/settingsApi';
+
+const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=1920';
 
 export const HeroSection = () => {
+  const [heroSettings, setHeroSettings] = useState({
+    heroImage: DEFAULT_HERO_IMAGE,
+    heroTitle: 'Discover the Essence of Fresh Spices & Pickles',
+    heroSubtitle: 'Handpicked ingredients, traditional recipes and authentic flavours crafted to make every meal memorable.',
+    heroBadge: '100% Pure & Handcrafted',
+    heroCtaText: 'Shop Spices & Pickles'
+  });
+  const [heroImgSrc, setHeroImgSrc] = useState(DEFAULT_HERO_IMAGE);
+
+  useEffect(() => {
+    const fetchHeroData = async () => {
+      try {
+        const res = await settingsApi.getHeroSettings();
+        if (res.success && res.data) {
+          setHeroSettings(res.data);
+          if (res.data.heroImage) {
+            setHeroImgSrc(res.data.heroImage);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load hero banner settings:', err);
+      }
+    };
+
+    fetchHeroData();
+  }, []);
+
   return (
     <section className="relative w-full h-[95vh] min-h-[660px] max-h-[920px] overflow-hidden bg-[#5E3718] border-b border-[#E8DDCF]/80">
       {/* Single Background Banner Image spanning full screen width */}
       <div className="absolute inset-0 w-full h-full">
         <img
-          src="https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=1920"
+          src={heroImgSrc}
           alt="Gajanan Pure & Homemade Services Fresh Spices and Pickles"
-          className="w-full h-full object-cover"
+          onError={() => setHeroImgSrc(DEFAULT_HERO_IMAGE)}
+          className="w-full h-full object-cover transition-opacity duration-500"
         />
-        {/* Dark Gradient Overlay for high-contrast text */}
+        {/* Dark Gradient Overlay for high-contrast text readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
       </div>
 
       {/* Content Floating Over Full Width Banner */}
-      <div className="relative z-10 max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
-        <div className="max-w-2xl space-y-6 text-left text-white">
+      <div className="relative z-10 max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex flex-col justify-center text-left">
+        <div className="max-w-2xl space-y-6 text-white">
           {/* Top Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#E6A817]/90 text-[#171717] text-xs font-extrabold uppercase tracking-widest shadow-md">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>100% Pure & Handcrafted</span>
+            <span>{heroSettings.heroBadge || '100% Pure & Handcrafted'}</span>
           </div>
 
           {/* Main Headline */}
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#FFFBF5] tracking-tight leading-[1.15] drop-shadow-md">
-            Discover the Essence of Fresh Spices & Pickles
+            {heroSettings.heroTitle}
           </h1>
 
           {/* Supporting Subtitle */}
           <p className="text-base sm:text-lg text-[#F9EFDD]/90 leading-relaxed font-sans max-w-xl">
-            Handpicked ingredients, traditional recipes and authentic flavours crafted to make every meal memorable.
+            {heroSettings.heroSubtitle}
           </p>
 
           {/* CTA Buttons */}
@@ -41,7 +72,7 @@ export const HeroSection = () => {
               to="/shop"
               className="px-8 py-4 rounded-xl bg-[#9A6428] text-white font-bold text-sm sm:text-base hover:bg-[#80511D] transition-all shadow-lg flex items-center gap-2 active:scale-95 cursor-pointer"
             >
-              <span>Shop Spices & Pickles</span>
+              <span>{heroSettings.heroCtaText || 'Shop Spices & Pickles'}</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
 
@@ -73,3 +104,5 @@ export const HeroSection = () => {
     </section>
   );
 };
+
+export default HeroSection;

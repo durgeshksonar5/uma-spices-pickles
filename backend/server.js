@@ -6,20 +6,19 @@ import { fileURLToPath } from 'url';
 import { connectDB } from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
+import settingsRoutes from './routes/settingsRoutes.js';
+import testimonialRoutes from './routes/testimonialRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables
 dotenv.config();
 
-// Initialize DB connection
 connectDB();
 
 const app = express();
 
-// Middleware
 const allowedOrigins = [
   process.env.CLIENT_URL || 'http://localhost:5173',
   'http://localhost:5173',
@@ -42,14 +41,14 @@ app.use(
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Static route for serving uploaded product images
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/testimonials', testimonialRoutes);
 
-// Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     success: true,
@@ -58,7 +57,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Error Handling Middlewares
 app.use(notFound);
 app.use(errorHandler);
 

@@ -11,7 +11,10 @@ import {
   Menu,
   X,
   ShieldCheck,
-  Store
+  Store,
+  Image as ImageIcon,
+  MessageSquare,
+  Gift
 } from 'lucide-react';
 
 export const AdminLayout = () => {
@@ -27,7 +30,10 @@ export const AdminLayout = () => {
   const navItems = [
     { label: 'Dashboard', path: '/admin', icon: LayoutDashboard, end: true },
     { label: 'All Products', path: '/admin/products', icon: Package, end: true },
-    { label: 'Add Product', path: '/admin/products/add', icon: PlusCircle, end: true }
+    { label: 'Add Product', path: '/admin/products/add', icon: PlusCircle, end: true },
+    { label: 'Hero Banner', path: '/admin/hero-banner', icon: ImageIcon, end: true },
+    { label: 'Festive Deal', path: '/admin/festive-deal', icon: Gift, end: true },
+    { label: 'Testimonials', path: '/admin/testimonials', icon: MessageSquare, end: true }
   ];
 
   return (
@@ -54,7 +60,7 @@ export const AdminLayout = () => {
                 {businessConfig.brandName} Admin
               </span>
               <span className="text-[10px] text-[#E8DDCF]/80 font-semibold tracking-widest uppercase">
-                Product Management
+                Control Center
               </span>
             </Link>
             <button
@@ -145,11 +151,11 @@ export const AdminLayout = () => {
 
           <div className="flex items-center gap-3">
             <Link
-              to="/shop"
+              to="/"
               target="_blank"
               className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-[#9A6428] hover:text-[#5E3718] bg-[#F9EFDD]/60 px-3.5 py-1.5 rounded-full border border-[#E8DDCF] transition-colors"
             >
-              <span>View Public Store</span>
+              <span>View Live Website</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -163,3 +169,5 @@ export const AdminLayout = () => {
     </div>
   );
 };
+
+export default AdminLayout;
