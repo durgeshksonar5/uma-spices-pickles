@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { productApi } from '../../api/productApi';
 import { formatCurrency } from '../../utils/currency';
 import { useToast } from '../../context/ToastContext';
+import { categories } from '../../data/categories';
 import {
   Search,
   Filter,
@@ -155,9 +156,11 @@ export const AdminProductsList = () => {
               className="text-xs font-semibold bg-transparent focus:outline-none text-[#171717] cursor-pointer"
             >
               <option value="all">All Categories</option>
-              <option value="spices">Spices</option>
-              <option value="pickles">Pickles</option>
-              <option value="blends">Blends</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.slug}>
+                  {cat.name}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -210,7 +213,9 @@ export const AdminProductsList = () => {
                 </tr>
               ) : (
                 products.map((p) => {
-                  const imgUrl = p.images && p.images.length > 0 ? p.images[0].url : '';
+                  const imgUrl = p.images && p.images.length > 0 
+                    ? (typeof p.images[0] === 'string' ? p.images[0] : p.images[0].url || '') 
+                    : '';
                   return (
                     <tr key={p._id || p.id} className="hover:bg-[#F9EFDD]/30 transition-colors">
                       <td className="py-3.5 px-4 flex items-center gap-3 min-w-[200px]">

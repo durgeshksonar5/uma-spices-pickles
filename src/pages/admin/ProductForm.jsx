@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { productApi } from '../../api/productApi';
 import { useToast } from '../../context/ToastContext';
+import { categories } from '../../data/categories';
 import {
   ArrowLeft,
   Upload,
@@ -15,6 +16,22 @@ import {
   AlertTriangle
 } from 'lucide-react';
 
+const generateSku = (name, categorySlug) => {
+  if (!name || !name.trim()) return '';
+  const brandPrefix = 'GAJ';
+  const catPrefix = categorySlug ? categorySlug.substring(0, 3).toUpperCase() : 'GEN';
+  const cleanName = name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  const namePrefix = cleanName.substring(0, 3) || 'PRD';
+  
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const suffix = Math.abs(hash % 90) + 10; // returns 10-99
+  
+  return `${brandPrefix}-${catPrefix}-${namePrefix}-${suffix}`;
+};
+
 export const ProductForm = () => {
   const { id } = useParams();
   const isEditMode = !!id;
@@ -26,13 +43,14 @@ export const ProductForm = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [errors, setErrors] = useState({});
+  const [isSkuManuallyEdited, setIsSkuManuallyEdited] = useState(isEditMode);
 
   // Form State
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
     sku: '',
-    category: 'spices',
+    category: categories[0]?.slug || 'spices',
     brand: 'Gajanan Pure & Homemade Services',
     shortDescription: '',
     description: '',
@@ -124,18 +142,42 @@ export const ProductForm = () => {
   // Handle Input Changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      };
 
-    if (name === 'name' && !isEditMode) {
-      const generatedSlug = value
-        .toLowerCase()
-        .trim()
-        .replace(/\s+/g, '-')
-        .replace(/[^\w\-]+/g, '');
-      setFormData((prev) => ({ ...prev, slug: generatedSlug }));
+      if (name === 'name' && !isEditMode) {
+        updated.slug = value
+          .toLowerCase()
+          .trim()
+          .replace(/\s+/g, '-')
+          .replace(/[^\w\-]+/g, '');
+
+        if (!isSkuManuallyEdited) {
+          updated.sku = generateSku(value, updated.category);
+        }
+      }
+
+      if (name === 'category' && !isEditMode && !isSkuManuallyEdited) {
+        updated.sku = generateSku(updated.name, value);
+      }
+
+      return updated;
+    });
+
+    if (name === 'sku') {
+      if (value.trim() === '') {
+        setIsSkuManuallyEdited(false);
+        setFormData((prev) => ({
+          ...prev,
+          sku: generateSku(prev.name, prev.category)
+        }));
+      } else {
+        setIsSkuManuallyEdited(true);
+      }
     }
   };
 
@@ -227,7 +269,12 @@ export const ProductForm = () => {
   const handleSetPrimaryImage = (index, isExisting = true) => {
     if (isExisting) {
       setExistingImages((prev) =>
-        prev.map((img, i) => ({ ...img, isPrimary: i === index }))
+        prev.map((img, i) => {
+          if (typeof img === 'string') {
+            return { url: img, isPrimary: i === index };
+          }
+          return { ...img, isPrimary: i === index };
+        })
       );
     }
   };
@@ -255,29 +302,40 @@ export const ProductForm = () => {
     setIsSubmitting(true);
 
     try {
-      const dataPayload = new FormData();
+      // Helper function to read file as base64
+      const readFileAsBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            resolve({
+              name: file.name,
+              type: file.type,
+              base64: reader.result.split(',')[1] // get raw base64 data
+            });
+          };
+          reader.onerror = (error) => reject(error);
+          reader.readAsDataURL(file);
+        });
+      };
 
-      Object.keys(formData).forEach((key) => {
-        dataPayload.append(key, formData[key]);
-      });
+      const newImages = await Promise.all(newImageFiles.map(readFileAsBase64));
 
       const validSizes = sizes.filter((s) => s.label && s.price !== '');
-      dataPayload.append('sizes', JSON.stringify(validSizes));
-
       const validWeights = weights.filter((w) => w.price !== '');
-      dataPayload.append('weights', JSON.stringify(validWeights));
 
-      dataPayload.append('images', JSON.stringify(existingImages));
-
-      newImageFiles.forEach((file) => {
-        dataPayload.append('imageFiles', file);
-      });
+      const payload = {
+        ...formData,
+        sizes: validSizes,
+        weights: validWeights,
+        images: existingImages,
+        newImages: newImages
+      };
 
       let res;
       if (isEditMode) {
-        res = await productApi.updateProduct(id, dataPayload, true);
+        res = await productApi.updateProduct(id, payload, false);
       } else {
-        res = await productApi.createProduct(dataPayload, true);
+        res = await productApi.createProduct(payload, false);
       }
 
       if (res.success) {
@@ -405,9 +463,11 @@ export const ProductForm = () => {
                   onChange={handleChange}
                   className="w-full px-3.5 py-2.5 bg-[#FFFBF5] border border-[#E8DDCF] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#9A6428] capitalize cursor-pointer"
                 >
-                  <option value="spices">Spices</option>
-                  <option value="pickles">Pickles</option>
-                  <option value="blends">Blends</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.slug}>
+                      {cat.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -721,25 +781,28 @@ export const ProductForm = () => {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
-              {existingImages.map((img, idx) => (
-                <div
-                  key={`existing-${idx}`}
-                  className={`relative rounded-xl overflow-hidden border-2 bg-white shadow-2xs h-32 ${
-                    img.isPrimary ? 'border-[#9A6428] ring-2 ring-[#9A6428]/30' : 'border-[#E8DDCF]'
-                  }`}
-                >
-                  <img src={img.url} alt="Product" className="w-full h-full object-cover" />
-                  <div className="absolute top-1.5 left-1.5 flex gap-1">
-                    <button
-                      type="button"
-                      onClick={() => handleSetPrimaryImage(idx, true)}
-                      className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                        img.isPrimary ? 'bg-[#9A6428] text-white' : 'bg-black/60 text-white'
-                      }`}
-                    >
-                      {img.isPrimary ? 'Primary' : 'Set Primary'}
-                    </button>
-                  </div>
+              {existingImages.map((img, idx) => {
+                const src = typeof img === 'string' ? img : img.url || '';
+                const isPrimary = typeof img === 'string' ? idx === 0 : !!img.isPrimary;
+                return (
+                  <div
+                    key={`existing-${idx}`}
+                    className={`relative rounded-xl overflow-hidden border-2 bg-white shadow-2xs h-32 ${
+                      isPrimary ? 'border-[#9A6428] ring-2 ring-[#9A6428]/30' : 'border-[#E8DDCF]'
+                    }`}
+                  >
+                    <img src={src} alt="Product" className="w-full h-full object-cover" />
+                    <div className="absolute top-1.5 left-1.5 flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleSetPrimaryImage(idx, true)}
+                        className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                          isPrimary ? 'bg-[#9A6428] text-white' : 'bg-black/60 text-white'
+                        }`}
+                      >
+                        {isPrimary ? 'Primary' : 'Set Primary'}
+                      </button>
+                    </div>
                   <button
                     type="button"
                     onClick={() => handleRemoveExistingImage(idx)}
@@ -747,8 +810,9 @@ export const ProductForm = () => {
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
 
               {newImagePreviews.map((src, idx) => (
                 <div

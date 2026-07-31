@@ -19,7 +19,7 @@ export const ToastProvider = ({ children }) => {
   }, []);
 
   return (
-    <ToastContext.Provider value={{ addToast, removeToast, toasts }}>
+    <ToastContext.Provider value={{ addToast, removeToast, toasts, showToast: addToast }}>
       {children}
     </ToastContext.Provider>
   );

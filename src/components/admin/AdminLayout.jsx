@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Package,
   PlusCircle,
+  FolderPlus,
   LogOut,
   ExternalLink,
   Menu,
@@ -31,6 +32,7 @@ export const AdminLayout = () => {
     { label: 'Dashboard', path: '/admin', icon: LayoutDashboard, end: true },
     { label: 'All Products', path: '/admin/products', icon: Package, end: true },
     { label: 'Add Product', path: '/admin/products/add', icon: PlusCircle, end: true },
+    { label: 'Add Category', path: '/admin/categories/add', icon: FolderPlus, end: true },
     { label: 'Hero Banner', path: '/admin/hero-banner', icon: ImageIcon, end: true },
     { label: 'Festive Deal', path: '/admin/festive-deal', icon: Gift, end: true },
     { label: 'Testimonials', path: '/admin/testimonials', icon: MessageSquare, end: true }

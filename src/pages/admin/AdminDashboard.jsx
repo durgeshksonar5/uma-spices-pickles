@@ -244,7 +244,9 @@ export const AdminDashboard = () => {
                 </tr>
               ) : (
                 recentProducts.map((p) => {
-                  const imgUrl = p.images && p.images.length > 0 ? p.images[0].url : '';
+                  const imgUrl = p.images && p.images.length > 0 
+                    ? (typeof p.images[0] === 'string' ? p.images[0] : p.images[0].url || '') 
+                    : '';
                   return (
                     <tr key={p._id || p.id} className="hover:bg-[#F9EFDD]/30 transition-colors">
                       <td className="py-3 px-4 flex items-center gap-3">
