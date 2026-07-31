@@ -114,10 +114,10 @@ export const Header = () => {
               {/* Contact Us Button */}
               <Link
                 to="/contact"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#9A6428] hover:bg-[#80511D] text-white transition-all shadow-xs group active:scale-95 text-xs font-bold"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#9A6428] hover:bg-[#80511D] text-white transition-all shadow-xs group active:scale-95 text-sm font-bold"
                 aria-label="Contact Us"
               >
-                <PhoneCall className="w-4 h-4 text-[#F9EFDD]" />
+                <PhoneCall className="w-5 h-5 text-[#F9EFDD]" />
                 <span>Contact Us</span>
               </Link>
             </div>
