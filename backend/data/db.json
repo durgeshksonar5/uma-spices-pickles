@@ -11,6 +11,48 @@
   ],
   "products": [
     {
+      "_id": "prod-1785125643669",
+      "id": "prod-1785125643669",
+      "name": "termaric",
+      "slug": "termaric",
+      "sku": "",
+      "category": "blends",
+      "brand": "Gajanan Pure & Homemade Services",
+      "shortDescription": "termaric powder",
+      "description": "",
+      "basePrice": 1999,
+      "salePrice": "599",
+      "stock": 30,
+      "status": "published",
+      "isFeatured": "false",
+      "isActive": "true",
+      "bestSeller": "true",
+      "descriptor": "Pure & Authentic",
+      "subcategory": "",
+      "ingredients": "",
+      "shelfLife": "12 Months",
+      "storageInstructions": "Store in a cool, dry place away from direct sunlight.",
+      "sizes": [],
+      "weights": [],
+      "images": [
+        {
+          "url": "http://localhost:5000/uploads/products/product-1785125643667-671664630.jpeg",
+          "filename": "product-1785125643667-671664630.jpeg",
+          "altText": "termaric",
+          "isPrimary": true
+        }
+      ],
+      "availableSizes": [
+        {
+          "size": "Standard Pack",
+          "price": 1999
+        }
+      ],
+      "price": 1999,
+      "createdAt": "2026-07-27T04:14:03.669Z",
+      "updatedAt": "2026-07-27T04:14:54.851Z"
+    },
+    {
       "_id": "prod-1785124155337",
       "id": "prod-1785124155337",
       "name": "Turmeric Powder",
