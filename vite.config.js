@@ -85,11 +85,180 @@ function localProductDevPlugin() {
     }
   }
 
+  const categoriesFilePath = path.resolve(__dirname, 'src/data/categories.js')
+
+  const getCategoriesList = () => {
+    try {
+      if (!fs.existsSync(categoriesFilePath)) return []
+      const fileContent = fs.readFileSync(categoriesFilePath, 'utf8')
+      const match = fileContent.match(/export\s+const\s+categories\s*=\s*(\[[\s\S]*?\]);/)
+      if (match && match[1]) {
+        return vm.runInNewContext(match[1]) || []
+      }
+      return []
+    } catch (e) {
+      console.error('Error reading categories list:', e)
+      return []
+    }
+  }
+
+  const saveCategoriesList = (list) => {
+    try {
+      const code = `export const categories = ${JSON.stringify(list, null, 2)};\n
+export const addCategory = (category) => {
+  const slug = category.name
+    .toLowerCase()
+    .trim()
+    .replace(/\\s+/g, '-')
+    .replace(/[^\\w\\-]+/g, '');
+
+  const newCat = {
+    id: \`cat-\${slug}\`,
+    slug,
+    name: category.name,
+    description: category.description || '',
+    image: category.image || "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=600",
+    icon: category.icon || "Sparkles"
+  };
+
+  categories.push(newCat);
+
+  if (typeof window !== 'undefined') {
+    fetch('/api/categories', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(newCat)
+    }).catch(err => console.error("Error writing category to categories.js:", err));
+  }
+
+  return newCat;
+};
+
+export const updateCategory = (id, updatedData) => {
+  const index = categories.findIndex(c => c.id === id || c.slug === id);
+  if (index >= 0) {
+    const slug = updatedData.name
+      .toLowerCase()
+      .trim()
+      .replace(/\\s+/g, '-')
+      .replace(/[^\\w\\-]+/g, '');
+
+    categories[index] = {
+      ...categories[index],
+      ...updatedData,
+      slug
+    };
+
+    if (typeof window !== 'undefined') {
+      fetch(\`/api/categories/\${id}\`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(categories[index])
+      }).catch(err => console.error("Error updating category in categories.js:", err));
+    }
+    return categories[index];
+  }
+  return null;
+};
+
+export const deleteCategory = (id) => {
+  const index = categories.findIndex(c => c.id === id || c.slug === id);
+  if (index >= 0) {
+    const deleted = categories.splice(index, 1)[0];
+
+    if (typeof window !== 'undefined') {
+      fetch(\`/api/categories/\${id}\`, {
+        method: 'DELETE'
+      }).catch(err => console.error("Error deleting category from categories.js:", err));
+    }
+    return deleted;
+  }
+  return null;
+};\n`
+      fs.writeFileSync(categoriesFilePath, code, 'utf8')
+    } catch (e) {
+      console.error('Error saving categories list:', e)
+    }
+  }
+
   return {
     name: 'local-product-dev-plugin',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         const url = req.url
+
+        // Categories persistence API
+        if (url === '/api/categories' && req.method === 'POST') {
+          const body = await getRequestBody(req)
+          const categoriesList = getCategoriesList()
+          
+          const exists = categoriesList.some(c => c.slug === body.slug)
+          if (!exists) {
+            categoriesList.push(body)
+            saveCategoriesList(categoriesList)
+            res.writeHead(201, { 'Content-Type': 'application/json' })
+            res.end(JSON.stringify({ success: true, message: 'Category added to file successfully', data: body }))
+          } else {
+            res.writeHead(200, { 'Content-Type': 'application/json' })
+            res.end(JSON.stringify({ success: true, message: 'Category already exists in file', data: body }))
+          }
+          return
+        }
+
+        if (url.startsWith('/api/categories/') && req.method === 'PUT') {
+          const parts = url.split('/')
+          const id = parts[parts.length - 1]?.split('?')[0]
+          const body = await getRequestBody(req)
+          const categoriesList = getCategoriesList()
+          
+          const index = categoriesList.findIndex(c => c.id === id || c.slug === id)
+          if (index >= 0) {
+            categoriesList[index] = {
+              ...categoriesList[index],
+              name: body.name,
+              slug: body.slug || categoriesList[index].slug,
+              description: body.description,
+              image: body.image,
+              icon: body.icon
+            }
+            saveCategoriesList(categoriesList)
+            res.writeHead(200, { 'Content-Type': 'application/json' })
+            res.end(JSON.stringify({ success: true, message: 'Category updated successfully', data: categoriesList[index] }))
+          } else {
+            res.writeHead(404, { 'Content-Type': 'application/json' })
+            res.end(JSON.stringify({ success: false, message: 'Category not found' }))
+          }
+          return
+        }
+
+        if (url.startsWith('/api/categories/') && req.method === 'DELETE') {
+          const parts = url.split('/')
+          const id = parts[parts.length - 1]?.split('?')[0]
+          
+          const categoriesList = getCategoriesList()
+          const filtered = categoriesList.filter(c => c.id !== id && c.slug !== id)
+          
+          if (categoriesList.length !== filtered.length) {
+            saveCategoriesList(filtered)
+            res.writeHead(200, { 'Content-Type': 'application/json' })
+            res.end(JSON.stringify({ success: true, message: 'Category deleted successfully' }))
+          } else {
+            res.writeHead(404, { 'Content-Type': 'application/json' })
+            res.end(JSON.stringify({ success: false, message: 'Category not found' }))
+          }
+          return
+        }
+
+        if (url === '/api/categories' && req.method === 'GET') {
+          const categoriesList = getCategoriesList()
+          res.writeHead(200, { 'Content-Type': 'application/json' })
+          res.end(JSON.stringify({ success: true, data: categoriesList }))
+          return
+        }
 
         // 1. Authenticate Admin
         if (url === '/api/auth/login' && req.method === 'POST') {

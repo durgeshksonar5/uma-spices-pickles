@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { addCategory, categories } from '../../data/categories';
+import { addCategory, updateCategory, deleteCategory, categories } from '../../data/categories';
 import { useToast } from '../../context/ToastContext';
 import {
   ArrowLeft,
@@ -13,7 +13,8 @@ import {
   Leaf,
   Grid,
   Layers,
-  FileText
+  Trash2,
+  Edit2
 } from 'lucide-react';
 
 const PRESET_IMAGES = [
@@ -49,6 +50,8 @@ export const AddCategory = () => {
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  const [editId, setEditId] = useState(null);
+  const [categoriesList, setCategoriesList] = useState([...categories]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -74,6 +77,51 @@ export const AddCategory = () => {
     }));
   };
 
+  const handleEdit = (cat) => {
+    setEditId(cat.id);
+    setFormData({
+      name: cat.name,
+      description: cat.description,
+      image: cat.image,
+      icon: cat.icon || 'Sparkles',
+      customImageUrl: cat.image.startsWith('https://images.unsplash.com') ? '' : cat.image
+    });
+    setErrors({});
+  };
+
+  const handleCancelEdit = () => {
+    setEditId(null);
+    setFormData({
+      name: '',
+      description: '',
+      image: PRESET_IMAGES[0].url,
+      icon: 'Sparkles',
+      customImageUrl: ''
+    });
+    setErrors({});
+  };
+
+  const handleDelete = (id, name) => {
+    const defaults = ['cat-spices', 'cat-pickles', 'cat-blends'];
+    if (defaults.includes(id)) {
+      showToast('Core system categories cannot be deleted.', 'error');
+      return;
+    }
+
+    if (window.confirm(`Are you sure you want to delete the category "${name}"?`)) {
+      try {
+        deleteCategory(id);
+        showToast('Category deleted successfully!', 'success');
+        setCategoriesList([...categories]);
+        if (editId === id) {
+          handleCancelEdit();
+        }
+      } catch (err) {
+        showToast(err.message || 'Failed to delete category', 'error');
+      }
+    }
+  };
+
   const validateForm = () => {
     const newErrors = {};
     if (!formData.name.trim()) {
@@ -85,7 +133,7 @@ export const AddCategory = () => {
         .replace(/\s+/g, '-')
         .replace(/[^\w\-]+/g, '');
       
-      const exists = categories.some((c) => c.slug === generatedSlug);
+      const exists = categories.some((c) => c.slug === generatedSlug && c.id !== editId);
       if (exists) {
         newErrors.name = 'A category with this name or slug already exists';
       }
@@ -116,24 +164,42 @@ export const AddCategory = () => {
     try {
       const finalImage = formData.customImageUrl.trim() || formData.image;
       
-      addCategory({
-        name: formData.name.trim(),
-        description: formData.description.trim(),
-        image: finalImage,
-        icon: formData.icon
-      });
+      if (editId) {
+        updateCategory(editId, {
+          name: formData.name.trim(),
+          description: formData.description.trim(),
+          image: finalImage,
+          icon: formData.icon
+        });
+        showToast('Category updated successfully!', 'success');
+        setEditId(null);
+      } else {
+        addCategory({
+          name: formData.name.trim(),
+          description: formData.description.trim(),
+          image: finalImage,
+          icon: formData.icon
+        });
+        showToast('Category added successfully!', 'success');
+      }
 
-      showToast('Category added successfully!', 'success');
-      navigate('/admin/products');
+      setFormData({
+        name: '',
+        description: '',
+        image: PRESET_IMAGES[0].url,
+        icon: 'Sparkles',
+        customImageUrl: ''
+      });
+      setCategoriesList([...categories]);
     } catch (err) {
-      showToast(err.message || 'Failed to add category', 'error');
+      showToast(err.message || 'Failed to save category', 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6 text-left font-sans max-w-3xl mx-auto pb-12">
+    <div className="space-y-6 text-left font-sans max-w-6xl mx-auto pb-12">
       {/* Top Navigation Back Link */}
       <div className="flex items-center justify-between">
         <Link
@@ -145,148 +211,233 @@ export const AddCategory = () => {
         </Link>
       </div>
 
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E8DDCF] shadow-sm space-y-6">
-        <div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#5E3718] flex items-center gap-2">
-            <FolderPlus className="w-7 h-7 text-[#9A6428]" />
-            <span>Add New Category</span>
-          </h1>
-          <p className="text-xs sm:text-sm text-[#777166] mt-0.5">
-            Create a custom product category that will appear in dropdowns, filters, and catalog sections.
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Category Name */}
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
-              Category Name *
-            </label>
-            <input
-              type="text"
-              name="name"
-              required
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="e.g. Chutneys & Sauces"
-              className="w-full px-3.5 py-2.5 bg-[#FFFBF5] border border-[#E8DDCF] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#9A6428]"
-            />
-            {errors.name && <p className="text-xs text-red-600 font-bold mt-1">{errors.name}</p>}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Form Card */}
+        <div className="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-[#E8DDCF] shadow-sm space-y-6">
+          <div>
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#5E3718] flex items-center gap-2">
+              <FolderPlus className="w-7 h-7 text-[#9A6428]" />
+              <span>{editId ? 'Edit Category' : 'Add New Category'}</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-[#777166] mt-0.5">
+              {editId 
+                ? 'Modify the details of this category in the catalog.'
+                : 'Create a custom product category that will appear in dropdowns, filters, and catalog sections.'
+              }
+            </p>
           </div>
 
-          {/* Description */}
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
-              Category Description *
-            </label>
-            <textarea
-              name="description"
-              required
-              rows="3"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="e.g. Hand-pounded, sun-cured, traditional dry chutneys and spicy pastes..."
-              className="w-full px-3.5 py-2.5 bg-[#FFFBF5] border border-[#E8DDCF] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#9A6428]"
-            />
-            {errors.description && (
-              <p className="text-xs text-red-600 font-bold mt-1">{errors.description}</p>
-            )}
-          </div>
-
-          {/* Icon Selector */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
-              Category Icon
-            </label>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-              {PRESET_ICONS.map((item) => {
-                const IconComp = item.icon;
-                const isSelected = formData.icon === item.name;
-                return (
-                  <button
-                    key={item.name}
-                    type="button"
-                    onClick={() => setFormData((prev) => ({ ...prev, icon: item.name }))}
-                    className={`py-3 px-2 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                      isSelected
-                        ? 'border-[#9A6428] bg-[#F9EFDD]/40 text-[#5E3718] font-bold'
-                        : 'border-[#E8DDCF] bg-white text-[#777166] hover:bg-[#FFFBF5]'
-                    }`}
-                  >
-                    <IconComp className="w-5 h-5" />
-                    <span className="text-[10px]">{item.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Image Selection */}
-          <div className="space-y-3 pt-2">
-            <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
-              Category Image Preset
-            </label>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {PRESET_IMAGES.map((img) => {
-                const isSelected = formData.image === img.url && !formData.customImageUrl;
-                return (
-                  <button
-                    key={img.name}
-                    type="button"
-                    onClick={() => handleSelectPresetImage(img.url)}
-                    className={`relative rounded-xl overflow-hidden border-2 h-20 transition-all cursor-pointer ${
-                      isSelected ? 'border-[#9A6428] ring-2 ring-[#9A6428]/20' : 'border-[#E8DDCF] opacity-70 hover:opacity-100'
-                    }`}
-                  >
-                    <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 flex items-end p-1.5">
-                      <span className="text-[9px] font-bold text-white leading-tight">{img.name}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="space-y-1 pt-1">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Category Name */}
+            <div className="space-y-1">
               <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
-                Or Custom Image URL
+                Category Name *
               </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  name="customImageUrl"
-                  value={formData.customImageUrl}
-                  onChange={handleChange}
-                  placeholder="https://images.unsplash.com/... (optional)"
-                  className="w-full px-3.5 py-2.5 pl-9 bg-[#FFFBF5] border border-[#E8DDCF] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#9A6428]"
-                />
-                <ImageIcon className="w-4 h-4 text-[#777166] absolute left-3.5 top-3" />
-              </div>
-              {errors.customImageUrl && (
-                <p className="text-xs text-red-600 font-bold mt-1">{errors.customImageUrl}</p>
+              <input
+                type="text"
+                name="name"
+                required
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="e.g. Chutneys & Sauces"
+                className="w-full px-3.5 py-2.5 bg-[#FFFBF5] border border-[#E8DDCF] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#9A6428]"
+              />
+              {errors.name && <p className="text-xs text-red-600 font-bold mt-1">{errors.name}</p>}
+            </div>
+
+            {/* Description */}
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
+                Category Description *
+              </label>
+              <textarea
+                name="description"
+                required
+                rows="3"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="e.g. Hand-pounded, sun-cured, traditional dry chutneys and spicy pastes..."
+                className="w-full px-3.5 py-2.5 bg-[#FFFBF5] border border-[#E8DDCF] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#9A6428]"
+              />
+              {errors.description && (
+                <p className="text-xs text-red-600 font-bold mt-1">{errors.description}</p>
               )}
             </div>
+
+            {/* Icon Selector */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
+                Category Icon
+              </label>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                {PRESET_ICONS.map((item) => {
+                  const IconComp = item.icon;
+                  const isSelected = formData.icon === item.name;
+                  return (
+                    <button
+                      key={item.name}
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, icon: item.name }))}
+                      className={`py-3 px-2 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-[#9A6428] bg-[#F9EFDD]/40 text-[#5E3718] font-bold'
+                          : 'border-[#E8DDCF] bg-white text-[#777166] hover:bg-[#FFFBF5]'
+                      }`}
+                    >
+                      <IconComp className="w-5 h-5" />
+                      <span className="text-[10px]">{item.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Image Selection */}
+            <div className="space-y-3 pt-2">
+              <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
+                Category Image Preset
+              </label>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {PRESET_IMAGES.map((img) => {
+                  const isSelected = formData.image === img.url && !formData.customImageUrl;
+                  return (
+                    <button
+                      key={img.name}
+                      type="button"
+                      onClick={() => handleSelectPresetImage(img.url)}
+                      className={`relative rounded-xl overflow-hidden border-2 h-20 transition-all cursor-pointer ${
+                        isSelected ? 'border-[#9A6428] ring-2 ring-[#9A6428]/20' : 'border-[#E8DDCF] opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 flex items-end p-1.5">
+                        <span className="text-[9px] font-bold text-white leading-tight">{img.name}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="space-y-1 pt-1">
+                <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
+                  Or Custom Image URL
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="customImageUrl"
+                    value={formData.customImageUrl}
+                    onChange={handleChange}
+                    placeholder="https://images.unsplash.com/... (optional)"
+                    className="w-full px-3.5 py-2.5 pl-9 bg-[#FFFBF5] border border-[#E8DDCF] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#9A6428]"
+                  />
+                  <ImageIcon className="w-4 h-4 text-[#777166] absolute left-3.5 top-3" />
+                </div>
+                {errors.customImageUrl && (
+                  <p className="text-xs text-red-600 font-bold mt-1">{errors.customImageUrl}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Form Actions */}
+            <div className="pt-4 border-t border-[#E8DDCF] flex items-center justify-end gap-3">
+              {editId ? (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="px-5 py-2.5 rounded-xl border border-[#E8DDCF] bg-white text-[#777166] hover:bg-[#FFFBF5] text-xs font-bold transition-all cursor-pointer"
+                >
+                  Cancel Edit
+                </button>
+              ) : (
+                <Link
+                  to="/admin/products"
+                  className="px-5 py-2.5 rounded-xl border border-[#E8DDCF] bg-white text-[#777166] hover:bg-[#FFFBF5] text-xs font-bold transition-all text-center"
+                >
+                  Cancel
+                </Link>
+              )}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-5 py-2.5 rounded-xl bg-[#9A6428] text-white hover:bg-[#80511D] text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Save className="w-4 h-4" />
+                <span>{isSubmitting ? 'Saving...' : editId ? 'Update Category' : 'Add Category'}</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Right Column: Existing Categories List Card */}
+        <div className="lg:col-span-5 bg-white p-6 sm:p-8 rounded-3xl border border-[#E8DDCF] shadow-sm space-y-6">
+          <div>
+            <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#5E3718]">
+              Existing Categories
+            </h2>
+            <p className="text-xs text-[#777166] mt-0.5">
+              View, edit or delete product categories.
+            </p>
           </div>
 
-          {/* Form Actions */}
-          <div className="pt-4 border-t border-[#E8DDCF] flex items-center justify-end gap-3">
-            <Link
-              to="/admin/products"
-              className="px-5 py-2.5 rounded-xl border border-[#E8DDCF] bg-white text-[#777166] hover:bg-[#FFFBF5] text-xs font-bold transition-all text-center"
-            >
-              Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-xl bg-[#9A6428] text-white hover:bg-[#80511D] text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Save className="w-4 h-4" />
-              <span>{isSubmitting ? 'Saving...' : 'Add Category'}</span>
-            </button>
+          <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
+            {categoriesList.map((cat) => {
+              const presetIcon = PRESET_ICONS.find((i) => i.name === cat.icon);
+              const IconComp = presetIcon ? presetIcon.icon : Grid;
+              const isDefault = ['cat-spices', 'cat-pickles', 'cat-blends'].includes(cat.id);
+
+              return (
+                <div
+                  key={cat.id}
+                  className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
+                    editId === cat.id
+                      ? 'border-[#9A6428] bg-[#F9EFDD]/20 shadow-xs'
+                      : 'border-[#E8DDCF] bg-[#FFFBF5] hover:bg-[#F9EFDD]/10'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-12 h-12 rounded-xl overflow-hidden border border-[#E8DDCF] bg-white shrink-0">
+                      <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="text-left min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <IconComp className="w-3.5 h-3.5 text-[#9A6428] shrink-0" />
+                        <h3 className="font-sans font-bold text-xs sm:text-sm text-[#171717] truncate capitalize">
+                          {cat.name}
+                        </h3>
+                      </div>
+                      <p className="text-[10px] text-[#777166] line-clamp-1 mt-0.5">
+                        {cat.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(cat)}
+                      className="p-1.5 rounded-lg bg-white border border-[#E8DDCF] text-[#9A6428] hover:bg-[#F9EFDD]/50 transition-all cursor-pointer"
+                      title="Edit Category"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    {!isDefault && (
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(cat.id, cat.name)}
+                        className="p-1.5 rounded-lg bg-white border border-[#E8DDCF] text-red-600 hover:bg-red-50 transition-all cursor-pointer"
+                        title="Delete Category"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
