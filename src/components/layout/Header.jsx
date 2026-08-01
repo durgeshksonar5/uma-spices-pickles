@@ -28,6 +28,7 @@ export const Header = () => {
     { name: 'Spices', path: '/shop?category=spices' },
     { name: 'Pickles', path: '/shop?category=pickles' },
     { name: 'Blends', path: '/shop?category=blends' },
+    { name: 'Gallery', path: '/gallery' },
     { name: 'About Us', path: '/about' },
     { name: 'Contact', path: '/contact' }
   ];

@@ -30,12 +30,38 @@ function localProductDevPlugin() {
   const srcAssetsDir = path.resolve(__dirname, 'src/assets/products')
   const publicAssetsDir = path.resolve(__dirname, 'public/assets/products')
 
+  const dbJsonFilePath = path.resolve(__dirname, 'backend/data/db.json')
+  const srcAssetsGalleryDir = path.resolve(__dirname, 'src/assets/gallery')
+  const publicAssetsGalleryDir = path.resolve(__dirname, 'public/assets/gallery')
+
   // Ensure dirs exist
   if (!fs.existsSync(srcAssetsDir)) {
     fs.mkdirSync(srcAssetsDir, { recursive: true })
   }
   if (!fs.existsSync(publicAssetsDir)) {
     fs.mkdirSync(publicAssetsDir, { recursive: true })
+  }
+  if (!fs.existsSync(srcAssetsGalleryDir)) {
+    fs.mkdirSync(srcAssetsGalleryDir, { recursive: true })
+  }
+  if (!fs.existsSync(publicAssetsGalleryDir)) {
+    fs.mkdirSync(publicAssetsGalleryDir, { recursive: true })
+  }
+
+  const getDB = () => {
+    try {
+      if (!fs.existsSync(dbJsonFilePath)) return { galleryItems: [] }
+      const content = fs.readFileSync(dbJsonFilePath, 'utf8')
+      return JSON.parse(content) || { galleryItems: [] }
+    } catch (e) {
+      return { galleryItems: [] }
+    }
+  }
+
+  const saveDB = (data) => {
+    try {
+      fs.writeFileSync(dbJsonFilePath, JSON.stringify(data, null, 2), 'utf8')
+    } catch (e) {}
   }
 
   const getProductsList = () => {
@@ -297,6 +323,115 @@ function localProductDevPlugin() {
           } else {
             res.writeHead(404, { 'Content-Type': 'application/json' })
             res.end(JSON.stringify({ success: false, message: 'Product not found' }))
+          }
+          return
+        }
+
+        // 6. Get gallery items
+        if (url === '/api/gallery' && req.method === 'GET') {
+          const db = getDB()
+          res.writeHead(200, { 'Content-Type': 'application/json' })
+          res.end(JSON.stringify({ success: true, data: db.galleryItems || [] }))
+          return
+        }
+
+        // 7. Create gallery item
+        if (url === '/api/gallery' && req.method === 'POST') {
+          const body = await getRequestBody(req)
+          const db = getDB()
+          if (!db.galleryItems) db.galleryItems = []
+
+          let finalImageUrl = body.imageUrl || ''
+          if (body.imageBase64) {
+            const ext = body.imageType ? (body.imageType.split('/')[1] || 'jpg') : 'jpg'
+            const filename = `gallery-${Date.now()}.${ext}`
+            const buffer = Buffer.from(body.imageBase64, 'base64')
+
+            fs.writeFileSync(path.resolve(srcAssetsGalleryDir, filename), buffer)
+            fs.writeFileSync(path.resolve(publicAssetsGalleryDir, filename), buffer)
+
+            finalImageUrl = `/assets/gallery/${filename}`
+          }
+
+          const newItem = {
+            _id: `gal-${Date.now()}`,
+            title: body.title ? body.title.trim() : '',
+            description: body.description ? body.description.trim() : '',
+            imageUrl: finalImageUrl,
+            createdAt: new Date().toISOString()
+          }
+
+          db.galleryItems.unshift(newItem)
+          saveDB(db)
+
+          res.writeHead(201, { 'Content-Type': 'application/json' })
+          res.end(JSON.stringify({ success: true, message: 'Gallery image uploaded successfully', data: newItem }))
+          return
+        }
+
+        // 8. Update gallery item
+        if (url.startsWith('/api/gallery/') && req.method === 'PUT') {
+          const parts = url.split('/')
+          const id = parts[parts.length - 1]?.split('?')[0]
+          const body = await getRequestBody(req)
+          const db = getDB()
+          if (!db.galleryItems) db.galleryItems = []
+
+          const index = db.galleryItems.findIndex(g => (g._id === id || g.id === id))
+          if (index >= 0) {
+            const current = db.galleryItems[index]
+            let finalImageUrl = current.imageUrl
+
+            if (body.imageBase64) {
+              const ext = body.imageType ? (body.imageType.split('/')[1] || 'jpg') : 'jpg'
+              const filename = `gallery-${Date.now()}.${ext}`
+              const buffer = Buffer.from(body.imageBase64, 'base64')
+
+              fs.writeFileSync(path.resolve(srcAssetsGalleryDir, filename), buffer)
+              fs.writeFileSync(path.resolve(publicAssetsGalleryDir, filename), buffer)
+
+              finalImageUrl = `/assets/gallery/${filename}`
+            } else if (body.imageUrl) {
+              finalImageUrl = body.imageUrl
+            }
+
+            const updated = {
+              ...current,
+              title: body.title !== undefined ? body.title.trim() : current.title,
+              description: body.description !== undefined ? body.description.trim() : current.description,
+              imageUrl: finalImageUrl,
+              updatedAt: new Date().toISOString()
+            }
+
+            db.galleryItems[index] = updated
+            saveDB(db)
+
+            res.writeHead(200, { 'Content-Type': 'application/json' })
+            res.end(JSON.stringify({ success: true, message: 'Gallery item updated successfully', data: updated }))
+          } else {
+            res.writeHead(404, { 'Content-Type': 'application/json' })
+            res.end(JSON.stringify({ success: false, message: 'Gallery item not found' }))
+          }
+          return
+        }
+
+        // 9. Delete gallery item
+        if (url.startsWith('/api/gallery/') && req.method === 'DELETE') {
+          const parts = url.split('/')
+          const id = parts[parts.length - 1]?.split('?')[0]
+          const db = getDB()
+          if (!db.galleryItems) db.galleryItems = []
+
+          const initialLen = db.galleryItems.length
+          db.galleryItems = db.galleryItems.filter(g => g._id !== id && g.id !== id)
+
+          if (db.galleryItems.length !== initialLen) {
+            saveDB(db)
+            res.writeHead(200, { 'Content-Type': 'application/json' })
+            res.end(JSON.stringify({ success: true, message: 'Gallery item deleted successfully' }))
+          } else {
+            res.writeHead(404, { 'Content-Type': 'application/json' })
+            res.end(JSON.stringify({ success: false, message: 'Gallery item not found' }))
           }
           return
         }

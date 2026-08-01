@@ -81,6 +81,11 @@ export const Footer = () => {
                   Blends
                 </Link>
               </li>
+              <li>
+                <Link to="/gallery" className="hover:text-[#9A6428] transition-colors">
+                  Photo Gallery
+                </Link>
+              </li>
             </ul>
           </div>
 

@@ -21,6 +21,7 @@ const Wishlist = lazy(() => import('./pages/Wishlist'));
 const Cart = lazy(() => import('./pages/Cart'));
 const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
+const Gallery = lazy(() => import('./pages/Gallery'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Admin pages
@@ -31,6 +32,7 @@ const ProductForm = lazy(() => import('./pages/admin/ProductForm'));
 const AdminHeroSettings = lazy(() => import('./pages/admin/AdminHeroSettings'));
 const AdminFestiveDealSettings = lazy(() => import('./pages/admin/AdminFestiveDealSettings'));
 const AdminTestimonials = lazy(() => import('./pages/admin/AdminTestimonials'));
+const AdminGallery = lazy(() => import('./pages/admin/AdminGallery'));
 const AddCategory = lazy(() => import('./pages/admin/AddCategory'));
 
 export const App = () => {
@@ -62,6 +64,7 @@ export const App = () => {
                     <Route path="/admin/hero-banner" element={<AdminHeroSettings />} />
                     <Route path="/admin/festive-deal" element={<AdminFestiveDealSettings />} />
                     <Route path="/admin/testimonials" element={<AdminTestimonials />} />
+                    <Route path="/admin/gallery" element={<AdminGallery />} />
                   </Route>
                 </Route>
 
@@ -79,6 +82,7 @@ export const App = () => {
                           <Route path="/product/:slug" element={<ProductDetails />} />
                           <Route path="/wishlist" element={<Wishlist />} />
                           <Route path="/cart" element={<Cart />} />
+                          <Route path="/gallery" element={<Gallery />} />
                           <Route path="/about" element={<About />} />
                           <Route path="/contact" element={<Contact />} />
                           <Route path="*" element={<NotFound />} />

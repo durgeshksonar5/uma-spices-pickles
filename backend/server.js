@@ -8,6 +8,7 @@ import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
 import testimonialRoutes from './routes/testimonialRoutes.js';
+import galleryRoutes from './routes/galleryRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -48,6 +49,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/testimonials', testimonialRoutes);
+app.use('/api/gallery', galleryRoutes);
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({

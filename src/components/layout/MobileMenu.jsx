@@ -12,6 +12,7 @@ export const MobileMenu = ({ isOpen, onClose }) => {
     { name: 'Spices', path: '/shop?category=spices' },
     { name: 'Pickles', path: '/shop?category=pickles' },
     { name: 'Blends', path: '/shop?category=blends' },
+    { name: 'Gallery', path: '/gallery' },
     { name: 'About Us', path: '/about' },
     { name: 'Contact Us', path: '/contact' },
   ];
