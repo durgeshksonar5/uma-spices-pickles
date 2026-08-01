@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const sizeSchema = new mongoose.Schema({
   label: { type: String, required: true, trim: true },
-  price: { type: Number, required: true, min: 0 },
+  price: { type: Number, default: 0, min: 0 },
   stock: { type: Number, default: 10, min: 0 }
 });
 
@@ -10,7 +10,7 @@ const weightSchema = new mongoose.Schema({
   label: { type: String, required: true, trim: true },
   value: { type: Number, default: 0, min: 0 },
   unit: { type: String, default: 'g', trim: true },
-  price: { type: Number, required: true, min: 0 },
+  price: { type: Number, default: 0, min: 0 },
   stock: { type: Number, default: 10, min: 0 }
 });
 
@@ -108,8 +108,8 @@ const productSchema = new mongoose.Schema(
     bestSeller: { type: Boolean, default: false },
     availableSizes: [
       {
-        size: { type: String, required: true },
-        price: { type: Number, required: true }
+        size: { type: String, default: 'Standard Pack' },
+        price: { type: Number, default: 0 }
       }
     ]
   },

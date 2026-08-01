@@ -1,16 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { Breadcrumb } from '../components/common/Breadcrumb';
 import { CartItem } from '../components/cart/CartItem';
 import { OrderSummary } from '../components/cart/OrderSummary';
 import { EmptyState } from '../components/common/EmptyState';
-import { WhatsAppCheckoutForm } from '../components/cart/WhatsAppCheckoutForm';
-import { ShoppingBag, ArrowLeft, RotateCcw } from 'lucide-react';
+import { buildWhatsAppOrderUrl } from '../utils/whatsapp';
+import { ShoppingBag, ArrowLeft, RotateCcw, MessageCircle } from 'lucide-react';
 
 export const Cart = () => {
   const { cartItems, totalItems, subtotal, clearCart } = useCart();
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+
+  const handleProceedToWhatsApp = () => {
+    const waUrl = buildWhatsAppOrderUrl(cartItems, {}, subtotal);
+    window.open(waUrl, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div className="bg-[#FFFBF5] min-h-screen py-8">
@@ -26,7 +30,7 @@ export const Cart = () => {
           {cartItems.length > 0 && (
             <button
               onClick={clearCart}
-              className="text-xs font-bold text-red-600 hover:text-red-800 flex items-center gap-1.5 transition-colors"
+              className="text-xs font-bold text-red-600 hover:text-red-800 flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <RotateCcw className="w-4 h-4" />
               <span>Clear Cart</span>
@@ -69,9 +73,10 @@ export const Cart = () => {
                 </Link>
 
                 <button
-                  onClick={() => setIsCheckoutOpen(true)}
-                  className="w-full sm:w-auto py-3.5 px-8 rounded-lg bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-base flex items-center justify-center gap-2.5 shadow-xs transition-all"
+                  onClick={handleProceedToWhatsApp}
+                  className="w-full sm:w-auto py-3.5 px-8 rounded-lg bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-base flex items-center justify-center gap-2.5 shadow-xs transition-all cursor-pointer"
                 >
+                  <MessageCircle className="w-5 h-5 fill-current" />
                   <span>Order on WhatsApp</span>
                 </button>
               </div>
@@ -82,19 +87,13 @@ export const Cart = () => {
               <OrderSummary
                 totalItems={totalItems}
                 subtotal={subtotal}
-                onProceedToCheckout={() => setIsCheckoutOpen(true)}
+                onProceedToCheckout={handleProceedToWhatsApp}
                 onClearCart={clearCart}
               />
             </div>
           </div>
         )}
       </div>
-
-      {/* WhatsApp Delivery Validation Form Modal */}
-      <WhatsAppCheckoutForm
-        isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
-      />
     </div>
   );
 };

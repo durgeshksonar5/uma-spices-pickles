@@ -74,17 +74,17 @@ export const Header = () => {
             </div>
 
             {/* Brand Logos (English & Marathi) */}
-            <Link to="/" className="flex items-center gap-2 sm:gap-3 group py-1 shrink-0">
+            <Link to="/" className="flex items-center gap-2 sm:gap-3 group py-1 shrink-0 ml-auto sm:ml-0">
               <img
                 src={logoEnglish}
                 alt="Gajanan Pure & Homemade Services Logo"
-                className="h-11 sm:h-14 w-auto object-contain transition-transform group-hover:scale-102"
+                className="h-12 sm:h-15 w-auto object-contain transition-transform group-hover:scale-102"
               />
-              <div className="h-8 sm:h-10 w-[1px] bg-[#E8DDCF]" />
+              <div className="h-7 sm:h-9 w-[1px] bg-[#E8DDCF]" />
               <img
                 src={logoMarathi}
                 alt="गजानन फुड्स मराठी लोगो"
-                className="h-16 sm:h-20 w-auto object-contain transition-transform group-hover:scale-102"
+                className="h-12 sm:h-15 w-auto object-contain transition-transform group-hover:scale-102"
               />
             </Link>
 
@@ -122,7 +122,7 @@ export const Header = () => {
               {/* Contact Us Button */}
               <Link
                 to="/contact"
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#9A6428] hover:bg-[#80511D] text-white transition-all shadow-xs group active:scale-95 text-sm font-bold"
+                className="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#9A6428] hover:bg-[#80511D] text-white transition-all shadow-xs group active:scale-95 text-sm font-bold"
                 aria-label="Contact Us"
               >
                 <PhoneCall className="w-5 h-5 text-[#F9EFDD]" />

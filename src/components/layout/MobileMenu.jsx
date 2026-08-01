@@ -38,11 +38,11 @@ export const MobileMenu = ({ isOpen, onClose }) => {
                 alt="Gajanan English Logo"
                 className="h-9 w-auto object-contain"
               />
-              <div className="h-6 w-[1px] bg-[#E8DDCF]" />
+              <div className="h-5 w-[1px] bg-[#E8DDCF]" />
               <img
                 src={logoMarathi}
                 alt="गजानन फुड्स लोगो"
-                className="h-13 w-auto object-contain"
+                className="h-9 w-auto object-contain"
               />
             </Link>
             <button

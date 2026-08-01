@@ -89,6 +89,9 @@ export const getProducts = async (req, res, next) => {
       let sort = { createdAt: -1 };
       if (req.query.sort) {
         switch (req.query.sort) {
+          case 'featured':
+            sort = { isFeatured: -1, bestSeller: -1, createdAt: -1 };
+            break;
           case 'price-low':
             sort = { basePrice: 1 };
             break;
@@ -127,7 +130,7 @@ export const getProducts = async (req, res, next) => {
     let filtered = [...db.products];
 
     if (req.query.category && req.query.category !== 'all') {
-      filtered = filtered.filter((p) => p.category === req.query.category.toLowerCase());
+      filtered = filtered.filter((p) => p.category && p.category.toLowerCase().trim() === req.query.category.toLowerCase().trim());
     }
 
     if (req.query.search) {
@@ -147,7 +150,37 @@ export const getProducts = async (req, res, next) => {
     }
 
     if (req.query.featured === 'true') {
-      filtered = filtered.filter((p) => p.isFeatured);
+      filtered = filtered.filter((p) => p.isFeatured === true || p.isFeatured === 'true' || p.featured);
+    }
+
+    if (req.query.sort) {
+      const s = req.query.sort;
+      filtered.sort((a, b) => {
+        if (s === 'featured') {
+          const aFeat = (a.isFeatured === true || a.isFeatured === 'true' || a.featured) ? 1 : 0;
+          const bFeat = (b.isFeatured === true || b.isFeatured === 'true' || b.featured) ? 1 : 0;
+          if (aFeat !== bFeat) return bFeat - aFeat;
+          const aBest = (a.bestSeller === true || a.bestSeller === 'true') ? 1 : 0;
+          const bBest = (b.bestSeller === true || b.bestSeller === 'true') ? 1 : 0;
+          if (aBest !== bBest) return bBest - aBest;
+          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+        }
+        if (s === 'price-low') {
+          return (Number(a.basePrice ?? a.price) || 0) - (Number(b.basePrice ?? b.price) || 0);
+        }
+        if (s === 'price-high') {
+          return (Number(b.basePrice ?? b.price) || 0) - (Number(a.basePrice ?? a.price) || 0);
+        }
+        if (s === 'best-selling') {
+          const aBest = (a.bestSeller === true || a.bestSeller === 'true') ? 1 : 0;
+          const bBest = (b.bestSeller === true || b.bestSeller === 'true') ? 1 : 0;
+          return bBest - aBest;
+        }
+        if (s === 'rating') {
+          return (Number(b.rating) || 5) - (Number(a.rating) || 5);
+        }
+        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      });
     }
 
     const total = filtered.length;

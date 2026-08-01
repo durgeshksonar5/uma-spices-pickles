@@ -66,9 +66,48 @@ export const productApi = {
         const uniqueCustoms = customProducts.filter((c) => !existingIds.includes(c._id || c.id));
         const merged = [...response.data, ...uniqueCustoms];
 
-        response.data = merged.filter(
+        let filtered = merged.filter(
           (p) => !deletedIds.includes(p._id) && !deletedIds.includes(p.id) && !deletedIds.includes(p.slug)
         );
+
+        // Strict Category Filter
+        if (params.category && params.category !== 'all') {
+          const targetCat = params.category.toLowerCase().trim();
+          filtered = filtered.filter((p) => p.category && p.category.toLowerCase().trim() === targetCat);
+        }
+
+        // Strict Sorting Filter
+        if (params.sort) {
+          const s = params.sort;
+          filtered.sort((a, b) => {
+            if (s === 'featured') {
+              const aFeat = (a.isFeatured === true || a.isFeatured === 'true' || a.featured) ? 1 : 0;
+              const bFeat = (b.isFeatured === true || b.isFeatured === 'true' || b.featured) ? 1 : 0;
+              if (aFeat !== bFeat) return bFeat - aFeat;
+              const aBest = (a.bestSeller === true || a.bestSeller === 'true') ? 1 : 0;
+              const bBest = (b.bestSeller === true || b.bestSeller === 'true') ? 1 : 0;
+              if (aBest !== bBest) return bBest - aBest;
+              return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+            }
+            if (s === 'price-low') {
+              return (Number(a.basePrice ?? a.price) || 0) - (Number(b.basePrice ?? b.price) || 0);
+            }
+            if (s === 'price-high') {
+              return (Number(b.basePrice ?? b.price) || 0) - (Number(a.basePrice ?? a.price) || 0);
+            }
+            if (s === 'best-selling') {
+              const aBest = (a.bestSeller === true || a.bestSeller === 'true') ? 1 : 0;
+              const bBest = (b.bestSeller === true || b.bestSeller === 'true') ? 1 : 0;
+              return bBest - aBest;
+            }
+            if (s === 'rating') {
+              return (Number(b.rating) || 5) - (Number(a.rating) || 5);
+            }
+            return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+          });
+        }
+
+        response.data = filtered;
       }
       return response;
     } catch (error) {
@@ -83,13 +122,38 @@ export const productApi = {
       );
 
       if (params.category && params.category !== 'all') {
-        filtered = filtered.filter((p) => p.category === params.category.toLowerCase());
+        const targetCat = params.category.toLowerCase().trim();
+        filtered = filtered.filter((p) => p.category && p.category.toLowerCase().trim() === targetCat);
       }
-      if (params.search) {
-        const s = params.search.toLowerCase();
-        filtered = filtered.filter(
-          (p) => p.name.toLowerCase().includes(s) || p.shortDescription?.toLowerCase().includes(s)
-        );
+
+      if (params.sort) {
+        const s = params.sort;
+        filtered.sort((a, b) => {
+          if (s === 'featured') {
+            const aFeat = (a.isFeatured === true || a.isFeatured === 'true' || a.featured) ? 1 : 0;
+            const bFeat = (b.isFeatured === true || b.isFeatured === 'true' || b.featured) ? 1 : 0;
+            if (aFeat !== bFeat) return bFeat - aFeat;
+            const aBest = (a.bestSeller === true || a.bestSeller === 'true') ? 1 : 0;
+            const bBest = (b.bestSeller === true || b.bestSeller === 'true') ? 1 : 0;
+            if (aBest !== bBest) return bBest - aBest;
+            return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+          }
+          if (s === 'price-low') {
+            return (Number(a.basePrice ?? a.price) || 0) - (Number(b.basePrice ?? b.price) || 0);
+          }
+          if (s === 'price-high') {
+            return (Number(b.basePrice ?? b.price) || 0) - (Number(a.basePrice ?? a.price) || 0);
+          }
+          if (s === 'best-selling') {
+            const aBest = (a.bestSeller === true || a.bestSeller === 'true') ? 1 : 0;
+            const bBest = (b.bestSeller === true || b.bestSeller === 'true') ? 1 : 0;
+            return bBest - aBest;
+          }
+          if (s === 'rating') {
+            return (Number(b.rating) || 5) - (Number(a.rating) || 5);
+          }
+          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+        });
       }
 
       return {

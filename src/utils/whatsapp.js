@@ -8,37 +8,44 @@ import { formatCurrency } from './currency';
  * @param {number} totalAmount 
  * @returns {string} wa.me target URL
  */
-export const buildWhatsAppOrderUrl = (cartItems, customerDetails, totalAmount) => {
-  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+export const buildWhatsAppOrderUrl = (cartItems = [], customerDetails = {}, totalAmount = 0) => {
+  const totalItems = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
 
-  let message = `Hello, I would like to place an order.\n\n`;
-  
-  message += `Customer Details\n\n`;
-  message += `Name: ${customerDetails.name}\n`;
-  message += `Phone: ${customerDetails.phone}\n`;
-  message += `Address: ${customerDetails.address}\n`;
-  message += `City: ${customerDetails.city}\n`;
-  message += `PIN Code: ${customerDetails.pincode}\n\n`;
+  let message = `Hello ${businessConfig.brandName},\n\nI would like to place an order:\n\n`;
 
-  message += `Order Details\n\n`;
-
-  cartItems.forEach((item, index) => {
-    const itemSubtotal = item.selectedSize.price * item.quantity;
-    message += `${index + 1}. ${item.product.name}\n`;
-    message += `   Size: ${item.selectedSize.size}\n`;
-    message += `   Quantity: ${item.quantity}\n`;
-    message += `   Price: ${formatCurrency(item.selectedSize.price)}\n`;
-    message += `   Subtotal: ${formatCurrency(itemSubtotal)}\n\n`;
-  });
-
-  message += `Total Items: ${totalItems}\n`;
-  message += `Total Amount: ${formatCurrency(totalAmount)}\n\n`;
-
-  if (customerDetails.orderNote && customerDetails.orderNote.trim()) {
-    message += `Order Note:\n${customerDetails.orderNote.trim()}\n\n`;
+  if (customerDetails && (customerDetails.name || customerDetails.phone || customerDetails.address)) {
+    message += `Customer Details:\n`;
+    if (customerDetails.name) message += `Name: ${customerDetails.name}\n`;
+    if (customerDetails.phone) message += `Phone: ${customerDetails.phone}\n`;
+    if (customerDetails.address) message += `Address: ${customerDetails.address}\n`;
+    if (customerDetails.city) message += `City: ${customerDetails.city}\n`;
+    if (customerDetails.pincode) message += `PIN Code: ${customerDetails.pincode}\n\n`;
   }
 
-  message += `Please confirm product availability, delivery charges and payment details.`;
+  message += `Order Items:\n`;
+  cartItems.forEach((item, index) => {
+    const pName = item.product?.name || item.name || 'Product';
+    const sSize = item.selectedSize?.size ? ` (${item.selectedSize.size})` : '';
+    const sPrice = item.selectedSize?.price || item.price || item.basePrice || 0;
+    const qty = item.quantity || 1;
+    const itemSubtotal = sPrice * qty;
+
+    message += `${index + 1}. ${pName}${sSize} x ${qty} - ${formatCurrency(itemSubtotal)}\n`;
+  });
+
+  const finalTotal = totalAmount || cartItems.reduce((acc, item) => {
+    const sPrice = item.selectedSize?.price || item.price || item.basePrice || 0;
+    return acc + sPrice * (item.quantity || 1);
+  }, 0);
+
+  message += `\nTotal Items: ${totalItems}\n`;
+  message += `Total Amount: ${formatCurrency(finalTotal)}\n\n`;
+
+  if (customerDetails && customerDetails.orderNote && customerDetails.orderNote.trim()) {
+    message += `Order Note: ${customerDetails.orderNote.trim()}\n\n`;
+  }
+
+  message += `Please confirm my order, total price, and delivery details. Thank you!`;
 
   const encodedMessage = encodeURIComponent(message);
   const cleanNumber = businessConfig.whatsAppNumber.replace(/\D/g, '');

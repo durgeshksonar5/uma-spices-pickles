@@ -235,7 +235,7 @@ export const AdminProductsList = () => {
                       <td className="py-3.5 px-4 capitalize font-semibold">{p.category}</td>
                       <td className="py-3.5 px-4">
                         <div className="font-bold text-[#171717]">
-                          {formatCurrency(p.basePrice || p.price)}
+                          {formatCurrency(p.basePrice || p.price) || '-'}
                         </div>
                         {p.salePrice && p.salePrice > 0 && p.salePrice < p.basePrice && (
                           <span className="text-[10px] text-green-600 font-bold block">

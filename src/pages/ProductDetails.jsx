@@ -4,7 +4,7 @@ import { productApi } from '../api/productApi';
 import { useCart } from '../context/CartContext';
 import { Breadcrumb } from '../components/common/Breadcrumb';
 import { ProductCard } from '../components/products/ProductCard';
-import { WhatsAppCheckoutForm } from '../components/cart/WhatsAppCheckoutForm';
+import { buildWhatsAppOrderUrl } from '../utils/whatsapp';
 import { formatCurrency } from '../utils/currency';
 import {
   MessageCircle,
@@ -127,7 +127,12 @@ export const ProductDetails = () => {
 
   const handleDirectWhatsAppOrder = () => {
     addToCart(product, currentSize, quantity, false);
-    setIsDirectCheckoutOpen(true);
+    const waUrl = buildWhatsAppOrderUrl(
+      [{ product, selectedSize: currentSize, quantity }],
+      {},
+      (currentSize.price || product.price || product.basePrice || 0) * quantity
+    );
+    window.open(waUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -179,16 +184,18 @@ export const ProductDetails = () => {
                   </span>
                 </div>
 
-                <div className="pt-2 flex items-baseline gap-3">
-                  <span className="font-sans font-bold text-3xl text-[#171717]">
-                    {formatCurrency(currentSize.price)}
-                  </span>
-                  {product.basePrice && product.basePrice > currentSize.price && (
-                    <span className="text-sm text-[#777166] line-through">
-                      {formatCurrency(product.basePrice)}
+                {Boolean(Number(currentSize.price) > 0) && (
+                  <div className="pt-2 flex items-baseline gap-3">
+                    <span className="font-sans font-bold text-3xl text-[#171717]">
+                      {formatCurrency(currentSize.price)}
                     </span>
-                  )}
-                </div>
+                    {Boolean(product.basePrice && Number(product.basePrice) > Number(currentSize.price)) && (
+                      <span className="text-sm text-[#777166] line-through">
+                        {formatCurrency(product.basePrice)}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 <p className="text-sm text-[#777166] leading-relaxed pt-2">
                   {product.shortDescription || product.description}
@@ -212,7 +219,9 @@ export const ProductDetails = () => {
                       }`}
                     >
                       <span>{sizeObj.size}</span>
-                      <span className="opacity-80">({formatCurrency(sizeObj.price)})</span>
+                      {Boolean(Number(sizeObj.price) > 0) && (
+                        <span className="opacity-80">({formatCurrency(sizeObj.price)})</span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -311,11 +320,6 @@ export const ProductDetails = () => {
           </div>
         )}
       </div>
-
-      <WhatsAppCheckoutForm
-        isOpen={isDirectCheckoutOpen}
-        onClose={() => setIsDirectCheckoutOpen(false)}
-      />
     </div>
   );
 };

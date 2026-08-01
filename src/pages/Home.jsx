@@ -2,7 +2,7 @@ import React from 'react';
 import { HeroSection } from '../components/home/HeroSection';
 import { ShopByCategorySection } from '../components/home/ShopByCategorySection';
 import { BestSellersSection } from '../components/home/BestSellersSection';
-import { ChefsBundleSection } from '../components/home/ChefsBundleSection';
+import { AdBannersSection } from '../components/home/AdBannersSection';
 import { CustomerReviewsSection } from '../components/home/CustomerReviewsSection';
 import { WhatsAppCtaSection } from '../components/home/WhatsAppCtaSection';
 
@@ -18,12 +18,8 @@ export const Home = () => {
       {/* 3. Explore Our Collections Section (Circular cutout 4-card grid) */}
       <ShopByCategorySection />
 
-      {/* 4. Promotional Section: Chef's Signature Bundle */}
-      <section className="py-16 bg-[#FFFBF5] border-b border-[#E8DDCF]/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <ChefsBundleSection />
-        </div>
-      </section>
+      {/* 4. Advertising Banners Section (4 Ad Images - 2 per line) */}
+      <AdBannersSection />
 
       {/* 5. Customer Testimonials Section */}
       <CustomerReviewsSection />

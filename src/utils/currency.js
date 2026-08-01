@@ -2,12 +2,17 @@ import { businessConfig } from '../config/businessConfig';
 
 /**
  * Formats a numeric value into currency format (e.g. ₹450)
- * @param {number} amount 
+ * Returns empty string "" if amount is 0, empty, null, or undefined.
+ * @param {number|string} amount 
  * @returns {string}
  */
 export const formatCurrency = (amount) => {
-  if (typeof amount !== 'number' || isNaN(amount)) {
-    return `${businessConfig.currencySymbol}0`;
+  if (amount === undefined || amount === null || amount === '' || isNaN(Number(amount))) {
+    return '';
   }
-  return `${businessConfig.currencySymbol}${amount.toLocaleString('en-IN')}`;
+  const num = Number(amount);
+  if (num === 0) {
+    return '';
+  }
+  return `${businessConfig.currencySymbol}${num.toLocaleString('en-IN')}`;
 };

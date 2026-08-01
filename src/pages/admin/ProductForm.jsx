@@ -318,8 +318,25 @@ export const ProductForm = () => {
 
       const newImages = await Promise.all(newImageFiles.map(readFileAsBase64));
 
-      const validSizes = sizes.filter((s) => s.label && s.price !== '');
-      const validWeights = weights.filter((w) => w.price !== '');
+      const validSizes = sizes
+        .filter((s) => s.label && s.label.trim() !== '')
+        .map((s) => ({
+          label: s.label.trim(),
+          price: s.price !== '' ? Number(s.price) : 0,
+          stock: Number(s.stock) || 10
+        }));
+
+      const validWeights = weights
+        .filter((w) => w.label || w.value)
+        .map((w) => ({
+          ...w,
+          price: w.price !== '' ? Number(w.price) : 0,
+          value: Number(w.value) || 0
+        }));
+
+      const availableSizes = validSizes.length > 0
+        ? validSizes.map((s) => ({ size: s.label, price: s.price }))
+        : [{ size: 'Standard Pack', price: formData.basePrice !== '' ? Number(formData.basePrice) : 0 }];
 
       const payload = {
         ...formData,
@@ -327,6 +344,7 @@ export const ProductForm = () => {
         salePrice: formData.salePrice !== '' ? Number(formData.salePrice) : 0,
         sizes: validSizes,
         weights: validWeights,
+        availableSizes: availableSizes,
         images: existingImages,
         newImages: newImages
       };

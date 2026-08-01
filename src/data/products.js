@@ -1,19 +1,19 @@
 export const products = [
   {
-    "id": "prod-kala-masala",
-    "slug": "kala-masala",
-    "name": " Kala masala",
+    "id": "prod-premium-amla-gatagat-candy---",
+    "slug": "premium-amla-gatagat-candy---",
+    "name": "Premium Amla GataGat Candy (आवळा गटागट कँडी)",
     "descriptor": "Pure & Authentic",
     "category": "spices",
     "subcategory": "",
     "shortDescription": "",
     "fullDescription": "",
     "images": [
-      "/assets/products/kala-masala-1785569366865-0.jpeg"
+      "/assets/products/premium-amla-gatagat-candy----1785599681800-0.jpeg"
     ],
-    "price": 149,
-    "originalPrice": 99,
-    "discount": 34,
+    "price": 0,
+    "originalPrice": 0,
+    "discount": 0,
     "availableSizes": [],
     "ingredients": "",
     "rating": 5,
@@ -21,9 +21,365 @@ export const products = [
     "stock": 50,
     "featured": false,
     "bestSeller": false,
-    "sku": "GAJ-SPI-KAL-38",
+    "sku": "GAJ-SPI-PRE-54",
     "shelfLife": "12 Months",
     "storageInstructions": "Store in a cool, dry place away from direct sunlight.",
-    "createdAt": "2026-08-01T07:29:26.868Z"
+    "createdAt": "2026-08-01T15:54:41.803Z"
+  },
+  {
+    "id": "prod-premium-amla-gatagat-candy---",
+    "slug": "premium-amla-gatagat-candy---",
+    "name": "Premium Amla GataGat Candy (आवळा गटागट कँडी)",
+    "descriptor": "Pure & Authentic",
+    "category": "amla-candy",
+    "subcategory": "",
+    "shortDescription": "",
+    "fullDescription": "",
+    "images": [
+      "/assets/products/premium-amla-gatagat-candy----1785599475737-0.jpeg"
+    ],
+    "price": 0,
+    "originalPrice": 0,
+    "discount": 0,
+    "availableSizes": [],
+    "ingredients": "",
+    "rating": 5,
+    "reviewCount": 0,
+    "stock": 50,
+    "featured": false,
+    "bestSeller": false,
+    "sku": "GAJ-AML-PRE-54",
+    "shelfLife": "12 Months",
+    "storageInstructions": "Store in a cool, dry place away from direct sunlight.",
+    "createdAt": "2026-08-01T15:51:15.739Z"
+  },
+  {
+    "id": "prod-premium-amla-gatagat-candy---",
+    "slug": "premium-amla-gatagat-candy---",
+    "name": "Premium Amla GataGat Candy (आवळा गटागट कँडी)",
+    "descriptor": "Pure & Authentic",
+    "category": "amla-candy",
+    "subcategory": "",
+    "shortDescription": "Enjoy the irresistible sweet, tangy, and spicy taste of our Premium Amla GataGat Candy, made from fresh Indian gooseberries. A flavorful treat packed with the natural goodness of Vitamin C and perfect for everyday snacking.",
+    "fullDescription": "Our Premium Amla GataGat Candy is crafted from carefully selected fresh Indian gooseberries (Amla) and coated with a unique blend of natural spices and seasonings to create its signature sweet, tangy, and spicy GataGat flavor. Every bite delivers a refreshing burst of taste while preserving the natural goodness of amla.\n\nIdeal for children and adults, this delicious candy is perfect for on-the-go snacking, after meals, or whenever you crave a flavorful and refreshing treat. Hygienically prepared and packed, it contains no artificial colors or preservatives, ensuring premium quality and authentic taste in every pack.\n\nKey Features:\n\nMade from Fresh Premium Amla (Indian Gooseberry)\nDelicious Sweet, Tangy & Spicy GataGat Flavor\nNaturally Rich in Vitamin C\nNo Artificial Colors or Preservatives\nHygienically Processed & Packed\nPerfect for Kids & Adults\nIdeal for Everyday Snacking & Refreshment",
+    "images": [
+      "/assets/products/premium-amla-gatagat-candy----1785599436274-0.jpeg"
+    ],
+    "price": 0,
+    "originalPrice": 0,
+    "discount": 0,
+    "availableSizes": [],
+    "ingredients": "",
+    "rating": 5,
+    "reviewCount": 0,
+    "stock": 50,
+    "featured": false,
+    "bestSeller": false,
+    "sku": "GAJ-AML-PRE-54",
+    "shelfLife": "12 Months",
+    "storageInstructions": "Store in a cool, dry place away from direct sunlight.",
+    "createdAt": "2026-08-01T15:50:36.277Z"
+  },
+  {
+    "id": "prod-premium-fresh-gavran-green-chilli-pickle-----",
+    "slug": "premium-fresh-gavran-green-chilli-pickle-----",
+    "name": "Premium Fresh Gavran Green Chilli Pickle (ताजे गावरान हिरवी मिरची लोणचे)",
+    "descriptor": "Pure & Authentic",
+    "category": "pickles",
+    "subcategory": "",
+    "shortDescription": "Traditional Fresh Gavran Green Chilli Pickle made from handpicked village-grown green chillies and authentic Indian spices. Bursting with spicy, tangy, and flavorful goodness to complement every meal.",
+    "fullDescription": "Our Premium Fresh Gavran Green Chilli Pickle is prepared using carefully selected fresh village-grown (Gavran) green chillies, blended with premium spices, mustard oil, and traditional seasonings to deliver an authentic homemade taste. Every batch is crafted using time-honored recipes to preserve its natural freshness, bold flavor, and rich aroma.\n\nPerfect as a side dish with chapati, bhakri, paratha, dal-rice, khichdi, and everyday meals, this pickle adds a delicious spicy kick to every bite. Hygienically prepared and packed without artificial colors or preservatives, it ensures purity, freshness, and premium quality in every jar.\n\nKey Features:\n\nMade from Fresh Gavran Green Chillies\nAuthentic Traditional Homemade Recipe\nRich Spicy, Tangy & Flavorful Taste\nHygienically Prepared & Packed\nNo Artificial Colors or Preservatives\nPerfect with Chapati, Bhakri, Rice, Paratha & Daily Meals\nFresh, Pure & Authentic Homemade Quality",
+    "images": [
+      "/assets/products/premium-fresh-gavran-green-chilli-pickle------1785599050015-0.jpeg"
+    ],
+    "price": 0,
+    "originalPrice": 0,
+    "discount": 0,
+    "availableSizes": [],
+    "ingredients": "",
+    "rating": 5,
+    "reviewCount": 0,
+    "stock": 50,
+    "featured": false,
+    "bestSeller": false,
+    "sku": "GAJ-PIC-PRE-75",
+    "shelfLife": "12 Months",
+    "storageInstructions": "Store in a cool, dry place away from direct sunlight.",
+    "createdAt": "2026-08-01T15:44:10.019Z"
+  },
+  {
+    "id": "prod-premium-crushed-lemon-pickle---",
+    "slug": "premium-crushed-lemon-pickle---",
+    "name": "Premium Crushed Lemon Pickle (क्रश लिंबू लोणचे)",
+    "descriptor": "Pure & Authentic",
+    "category": "pickles",
+    "subcategory": "",
+    "shortDescription": "Traditional Crushed Lemon Pickle made from fresh, handpicked lemons and a flavorful blend of authentic spices. Bursting with tangy, spicy taste, it's the perfect accompaniment to every meal.",
+    "fullDescription": "Our Premium Crushed Lemon Pickle is crafted using fresh, juicy lemons that are carefully crushed and blended with premium-quality spices, salt, and traditional seasonings. Prepared using an authentic homemade recipe, this pickle delivers the perfect balance of tangy, spicy, and savory flavors in every bite.\n\nWhether served with chapati, paratha, rice, dal, khichdi, or your favorite Indian meal, our Crushed Lemon Pickle adds a delicious burst of flavor to every plate. Hygienically prepared and packed, it contains no artificial colors or preservatives, ensuring freshness, purity, and authentic homemade taste.\n\nKey Features:\n\nMade from Fresh Handpicked Lemons\nAuthentic Traditional Recipe\nRich Tangy & Spicy Flavor\nHygienically Prepared & Packed\nNo Artificial Colors or Preservatives\nPerfect with Chapati, Rice, Paratha & Everyday Meals\nAuthentic Homemade Taste",
+    "images": [
+      "/assets/products/premium-crushed-lemon-pickle----1785598908770-0.jpeg"
+    ],
+    "price": 0,
+    "originalPrice": 0,
+    "discount": 0,
+    "availableSizes": [],
+    "ingredients": "",
+    "rating": 5,
+    "reviewCount": 0,
+    "stock": 50,
+    "featured": false,
+    "bestSeller": false,
+    "sku": "GAJ-PIC-PRE-97",
+    "shelfLife": "12 Months",
+    "storageInstructions": "Store in a cool, dry place away from direct sunlight.",
+    "createdAt": "2026-08-01T15:41:48.773Z"
+  },
+  {
+    "id": "prod-premium-methi-ladoo--",
+    "slug": "premium-methi-ladoo--",
+    "name": "Premium Methi Ladoo (मेथीचे लाडू)",
+    "descriptor": "Pure & Authentic",
+    "category": "ladoo-",
+    "subcategory": "",
+    "shortDescription": "Traditional Methi Ladoos made with premium fenugreek seeds, pure ghee, jaggery, dry fruits, and wholesome ingredients. Nutritious, flavorful, and prepared using an authentic homemade recipe.",
+    "fullDescription": "Our Premium Methi Ladoos are handcrafted using carefully selected fenugreek (methi) seeds, pure desi ghee, jaggery, wheat flour, edible gum (gond), and premium dry fruits. Prepared using a traditional recipe, these nutritious ladoos offer a perfect balance of rich taste and natural goodness.\n\nKnown for their wholesome ingredients and authentic flavor, Methi Ladoos are especially popular during winter and are enjoyed as a healthy snack for the entire family. Hygienically prepared and packed, they contain no artificial colors, flavors, or preservatives, ensuring freshness and premium quality in every bite.\n\nKey Features:\n\nMade with Premium Fenugreek (Methi) Seeds\nPrepared with Pure Ghee & Jaggery\nRich in Dry Fruits & Traditional Ingredients\nNo Artificial Colors or Preservatives\nHygienically Prepared & Packed\nAuthentic Homemade Taste\nPerfect for Daily Nutrition & Winter Wellness",
+    "images": [
+      "/assets/products/premium-methi-ladoo---1785598566407-0.jpeg"
+    ],
+    "price": 0,
+    "originalPrice": 0,
+    "discount": 0,
+    "availableSizes": [],
+    "ingredients": "",
+    "rating": 5,
+    "reviewCount": 0,
+    "stock": 50,
+    "featured": false,
+    "bestSeller": false,
+    "sku": "GAJ-LAD-PRE-80",
+    "shelfLife": "12 Months",
+    "storageInstructions": "Store in a cool, dry place away from direct sunlight.",
+    "createdAt": "2026-08-01T15:36:06.410Z"
+  },
+  {
+    "id": "prod-premium-amla-murabba--",
+    "slug": "premium-amla-murabba--",
+    "name": "Premium Amla Murabba (आवळा मुरंबा)",
+    "descriptor": "Pure & Authentic",
+    "category": "murabba--",
+    "subcategory": "",
+    "shortDescription": "Traditional Amla Murabba made from carefully selected fresh Indian gooseberries. Naturally rich in Vitamin C with a delicious sweet and tangy taste, making it a healthy and flavorful addition to your daily diet.",
+    "fullDescription": "Our Premium Amla Murabba is prepared using fresh, handpicked Indian gooseberries (Amla) and traditional recipes to preserve their natural goodness, taste, and nutritional value. Slowly cooked with quality ingredients, it offers a perfect balance of sweetness and tanginess while retaining the rich flavor of fresh amla.\n\nAmla Murabba is a wholesome treat that can be enjoyed as a healthy snack, dessert, or as part of your daily meal. Hygienically prepared and packed, it contains no artificial colors or preservatives, ensuring purity, freshness, and authentic homemade taste in every jar.\n\nKey Features:\n\nMade from Premium Fresh Amla\nRich Source of Natural Vitamin C\nTraditional Sweet & Tangy Flavor\nNo Artificial Colors or Preservatives\nHygienically Prepared & Packed\nPerfect as a Healthy Snack or Daily Dietary Addition",
+    "images": [
+      "/assets/products/premium-amla-murabba---1785598399173-0.jpeg"
+    ],
+    "price": 0,
+    "originalPrice": 0,
+    "discount": 0,
+    "availableSizes": [],
+    "ingredients": "",
+    "rating": 5,
+    "reviewCount": 0,
+    "stock": 50,
+    "featured": false,
+    "bestSeller": true,
+    "sku": "GAJ-MUR-PRE-86",
+    "shelfLife": "12 Months",
+    "storageInstructions": "Store in a cool, dry place away from direct sunlight.",
+    "createdAt": "2026-08-01T15:33:19.176Z"
+  },
+  {
+    "id": "prod-premium-kanda-lasun-masala---",
+    "slug": "premium-kanda-lasun-masala---",
+    "name": "Premium Kanda Lasun Masala (कांदा लसूण मसाला)",
+    "descriptor": "Pure & Authentic",
+    "category": "spices",
+    "subcategory": "",
+    "shortDescription": "Authentic Maharashtrian Kanda Lasun Masala made from premium roasted onions, garlic, and aromatic spices. Rich in flavor, bold in taste, and perfect for enhancing both vegetarian and non-vegetarian dishes.",
+    "fullDescription": "Our Premium Kanda Lasun Masala is a traditional Maharashtrian spice blend crafted from carefully selected roasted onions, garlic, red chillies, and a blend of premium whole spices. Expertly roasted and finely ground, this masala delivers a rich aroma, smoky flavor, and authentic taste that elevates every meal.\n\nIdeal for preparing chicken curry, mutton curry, fish curry, Bharli Vangi, Misal, Usal, Kolhapuri dishes, gravies, and a variety of vegetable recipes, this versatile masala adds depth, spice, and traditional flavor to your cooking. Hygienically processed and packed without artificial colors, preservatives, or additives, it ensures premium quality and freshness in every pack.\n\nKey Features:\n\nAuthentic Maharashtrian Kanda Lasun Masala\nMade with Premium Roasted Onion, Garlic & Whole Spices\nRich Aroma & Bold Traditional Flavor\nNo Artificial Colors or Preservatives\nHygienically Processed & Packed\nPerfect for Vegetarian & Non-Vegetarian Recipes",
+    "images": [
+      "/assets/products/premium-kanda-lasun-masala----1785597886102-0.jpeg"
+    ],
+    "price": 105,
+    "originalPrice": 105,
+    "discount": 0,
+    "availableSizes": [
+      {
+        "size": "250",
+        "price": 105
+      }
+    ],
+    "ingredients": "",
+    "rating": 5,
+    "reviewCount": 0,
+    "stock": 50,
+    "featured": false,
+    "bestSeller": false,
+    "sku": "GAJ-SPI-PRE-95",
+    "shelfLife": "12 Months",
+    "storageInstructions": "Store in a cool, dry place away from direct sunlight.",
+    "createdAt": "2026-08-01T15:24:46.105Z"
+  },
+  {
+    "id": "prod-premium-tea-masala--",
+    "slug": "premium-tea-masala--",
+    "name": "Premium Tea Masala (चहा मसाला)",
+    "descriptor": "Pure & Authentic",
+    "category": "spices",
+    "subcategory": "",
+    "shortDescription": "A premium blend of aromatic whole spices specially crafted to enhance the flavor, aroma, and richness of your daily cup of tea. Enjoy a refreshing and authentic masala chai experience in every sip.",
+    "fullDescription": "Our Premium Tea Masala is a carefully balanced blend of high-quality spices, including cardamom, cinnamon, cloves, black pepper, dry ginger, and other traditional ingredients. Expertly ground and hygienically packed, this aromatic spice mix transforms ordinary tea into a flavorful and refreshing masala chai.\n\nPerfect for milk tea, masala chai, and herbal tea, this tea masala delivers a rich aroma, warm spicy flavor, and authentic taste. Made without artificial colors, preservatives, or additives, it ensures purity, freshness, and premium quality in every pack.\n\nKey Features:\n\nPremium Blend of Natural Spices\nRich Aroma & Authentic Masala Chai Flavor\nMade with Cardamom, Cinnamon, Cloves, Ginger & Black Pepper\nNo Artificial Colors or Preservatives\nHygienically Processed & Packed\nPerfect for Daily Tea Preparation",
+    "images": [
+      "/assets/products/premium-tea-masala---1785597465282-0.jpeg"
+    ],
+    "price": 120,
+    "originalPrice": 120,
+    "discount": 8,
+    "availableSizes": [
+      {
+        "size": "80",
+        "price": 120
+      }
+    ],
+    "ingredients": "",
+    "rating": 5,
+    "reviewCount": 0,
+    "stock": 50,
+    "featured": false,
+    "bestSeller": true,
+    "sku": "GAJ-SPI-PRE-88",
+    "shelfLife": "12 Months",
+    "storageInstructions": "Store in a cool, dry place away from direct sunlight.",
+    "createdAt": "2026-08-01T15:17:45.285Z",
+    "updatedAt": "2026-08-01T15:18:27.393Z"
+  },
+  {
+    "id": "prod-premium-amla-candy--",
+    "slug": "premium-amla-candy--",
+    "name": "Premium Amla Candy (आवळा कँडी)",
+    "descriptor": "Pure & Authentic",
+    "category": "amla-candy",
+    "subcategory": "",
+    "shortDescription": "Delicious and nutritious Amla Candy made from premium Indian gooseberries. Naturally tangy, mildly sweet, and packed with the goodness of Vitamin C for a healthy and refreshing snack.",
+    "fullDescription": "Our Premium Amla Candy is made from carefully selected fresh Indian gooseberries (Amla), known for their rich Vitamin C content and natural health benefits. The amla pieces are expertly processed and coated with just the right amount of sweetness to create a delicious, tangy treat that can be enjoyed by people of all ages.\n\nPerfect as a healthy snack, digestive treat, or travel companion, our Amla Candy is prepared under hygienic conditions to ensure freshness, quality, and great taste. Free from artificial preservatives, it offers the authentic flavor of amla while retaining its natural goodness.",
+    "images": [
+      "/assets/products/premium-amla-candy---1785597070392-0.jpeg"
+    ],
+    "price": 80,
+    "originalPrice": 60,
+    "discount": 25,
+    "availableSizes": [
+      {
+        "size": "100",
+        "price": 60
+      }
+    ],
+    "ingredients": "",
+    "rating": 5,
+    "reviewCount": 0,
+    "stock": 50,
+    "featured": true,
+    "isFeatured": true,
+    "bestSeller": true,
+    "sku": "GAJ-AML-PRE-99",
+    "shelfLife": "12 Months",
+    "storageInstructions": "Store in a cool, dry place away from direct sunlight.",
+    "createdAt": "2026-08-01T15:11:10.395Z"
+  },
+  {
+    "id": "prod-premium-kala-masala--",
+    "slug": "premium-kala-masala--",
+    "name": "Premium Kala Masala (काळा मसाला)",
+    "descriptor": "Pure & Authentic",
+    "category": "blends",
+    "subcategory": "",
+    "shortDescription": "Authentic Maharashtrian Kala Masala made from a carefully selected blend of roasted spices. Rich in aroma, bold in flavor, and perfect for enhancing traditional Maharashtrian dishes.",
+    "fullDescription": "Our Premium Kala Masala is a traditional Maharashtrian spice blend prepared using high-quality whole spices that are carefully roasted and ground to perfection. This aromatic masala delivers a deep, smoky flavor and rich fragrance, making it an essential ingredient in authentic Maharashtrian cuisine.",
+    "images": [
+      "/assets/products/premium-kala-masala---1785596860890-0.jpeg"
+    ],
+    "price": 160,
+    "originalPrice": 160,
+    "discount": 0,
+    "availableSizes": [
+      {
+        "size": "250",
+        "price": 160
+      }
+    ],
+    "ingredients": "",
+    "rating": 5,
+    "reviewCount": 0,
+    "stock": 50,
+    "featured": true,
+    "isFeatured": true,
+    "bestSeller": true,
+    "sku": "GAJ-SPI-PRE-82",
+    "shelfLife": "12 Months",
+    "storageInstructions": "Store in a cool, dry place away from direct sunlight.",
+    "createdAt": "2026-08-01T15:07:40.893Z"
+  },
+  {
+    "id": "prod-premium-red-chilli-powder---",
+    "slug": "premium-red-chilli-powder---",
+    "name": "Premium Red Chilli Powder (लाल मिरची पावडर)",
+    "descriptor": "Pure & Authentic",
+    "category": "spices",
+    "subcategory": "",
+    "shortDescription": "Premium-quality red chilli powder made from carefully selected sun-dried red chillies. Finely ground to deliver vibrant color, rich aroma, and the perfect level of spice for authentic Indian cooking.",
+    "fullDescription": "Our Premium Red Chilli Powder is prepared from carefully selected, naturally sun-dried red chillies that are hygienically processed and finely ground to preserve their natural color, aroma, and pungency. It enhances the taste and appearance of a wide variety of dishes.",
+    "images": [
+      "/assets/products/premium-red-chilli-powder----1785596652015-0.jpeg"
+    ],
+    "price": 160,
+    "originalPrice": 160,
+    "discount": 11,
+    "availableSizes": [
+      {
+        "size": "200",
+        "price": 160
+      }
+    ],
+    "ingredients": "",
+    "rating": 5,
+    "reviewCount": 0,
+    "stock": 50,
+    "featured": true,
+    "isFeatured": true,
+    "bestSeller": true,
+    "sku": "GAJ-BLE-PRE-62",
+    "shelfLife": "12 Months",
+    "storageInstructions": "Store in a cool, dry place away from direct sunlight.",
+    "createdAt": "2026-08-01T15:04:12.019Z",
+    "updatedAt": "2026-08-01T15:05:23.373Z"
+  },
+  {
+    "id": "prod-turmeric-",
+    "slug": "turmeric-",
+    "name": "Turmeric (हळद)",
+    "descriptor": "Pure & Authentic",
+    "category": "spices",
+    "subcategory": "",
+    "shortDescription": "Premium-quality turmeric powder made from carefully selected Salem turmeric roots, naturally rich in curcumin. Finely ground for vibrant color, rich aroma, and authentic flavor.",
+    "fullDescription": "Our Premium Salem Turmeric Powder is made from handpicked, high-curcumin turmeric roots sourced from Salem, renowned for producing some of the finest turmeric in India.",
+    "images": [
+      "/assets/products/turmeric--1785596438895-0.jpeg"
+    ],
+    "price": 200,
+    "originalPrice": 230,
+    "discount": -15,
+    "availableSizes": [],
+    "ingredients": "",
+    "rating": 5,
+    "reviewCount": 0,
+    "stock": 50,
+    "featured": true,
+    "isFeatured": true,
+    "bestSeller": true,
+    "sku": "GAJ-BLE-TUR-82",
+    "shelfLife": "12 Months",
+    "storageInstructions": "Store in a cool, dry place away from direct sunlight.",
+    "createdAt": "2026-08-01T15:00:38.898Z",
+    "updatedAt": "2026-08-01T15:01:33.095Z"
   }
 ];

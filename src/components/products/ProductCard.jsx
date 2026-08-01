@@ -82,16 +82,18 @@ export const ProductCard = ({ product }) => {
           </p>
 
           {/* Price */}
-          <div className="pt-1 flex items-baseline gap-2">
-            <span className="font-sans font-bold text-base sm:text-lg text-[#171717]">
-              {formatCurrency(product.price || product.basePrice)}
-            </span>
-            {product.originalPrice && product.originalPrice > (product.price || product.basePrice) && (
-              <span className="text-xs text-[#777166] line-through">
-                {formatCurrency(product.originalPrice)}
+          {Boolean(Number(product.price || product.basePrice) > 0) && (
+            <div className="pt-1 flex items-baseline gap-2">
+              <span className="font-sans font-bold text-base sm:text-lg text-[#171717]">
+                {formatCurrency(product.price || product.basePrice)}
               </span>
-            )}
-          </div>
+              {Boolean(product.originalPrice && Number(product.originalPrice) > Number(product.price || product.basePrice)) && (
+                <span className="text-xs text-[#777166] line-through">
+                  {formatCurrency(product.originalPrice)}
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Rating */}
           <div className="flex items-center gap-1 text-xs pt-1">
