@@ -64,7 +64,7 @@ const productSchema = new mongoose.Schema(
 
     basePrice: {
       type: Number,
-      required: [true, 'Base price is required'],
+      default: 0,
       min: [0, 'Price cannot be negative']
     },
     salePrice: {

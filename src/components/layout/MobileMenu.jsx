@@ -1,7 +1,9 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { X, ChevronRight, MessageCircle } from 'lucide-react';
 import { businessConfig } from '../../config/businessConfig';
+import logoEnglish from '../../assets/gajanan-food-logo-english.png';
+import logoMarathi from '../../assets/gajanan-food-logo-marathi.png';
 
 export const MobileMenu = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
@@ -29,18 +31,23 @@ export const MobileMenu = ({ isOpen, onClose }) => {
       <div className="fixed inset-y-0 left-0 w-full max-w-xs bg-[#FFFBF5] shadow-2xl flex flex-col justify-between z-10 animate-in slide-in-from-left duration-300">
         <div>
           {/* Header */}
-          <div className="p-5 flex items-center justify-between border-b border-[#E8DDCF]">
-            <div className="flex flex-col">
-              <span className="font-serif font-bold text-xl text-[#5E3718] leading-none uppercase tracking-wider">
-                {businessConfig.brandName}
-              </span>
-              <span className="text-[9px] text-[#777166] font-semibold tracking-[0.2em] uppercase mt-0.5">
-                {businessConfig.brandSubtext}
-              </span>
-            </div>
+          <div className="p-3.5 flex items-center justify-between border-b border-[#E8DDCF]">
+            <Link to="/" onClick={onClose} className="flex items-center gap-2">
+              <img
+                src={logoEnglish}
+                alt="Gajanan English Logo"
+                className="h-9 w-auto object-contain"
+              />
+              <div className="h-6 w-[1px] bg-[#E8DDCF]" />
+              <img
+                src={logoMarathi}
+                alt="गजानन फुड्स लोगो"
+                className="h-13 w-auto object-contain"
+              />
+            </Link>
             <button
               onClick={onClose}
-              className="p-2 text-[#171717] hover:text-[#5E3718] rounded-lg bg-[#F9EFDD] transition-colors"
+              className="p-2 text-[#171717] hover:text-[#5E3718] rounded-lg bg-[#F9EFDD] transition-colors shrink-0"
               aria-label="Close menu"
             >
               <X className="w-5 h-5" />

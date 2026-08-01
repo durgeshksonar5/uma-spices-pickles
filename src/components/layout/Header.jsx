@@ -3,6 +3,8 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, User, PhoneCall } from 'lucide-react';
 import { businessConfig } from '../../config/businessConfig';
 import { MobileMenu } from './MobileMenu';
+import logoEnglish from '../../assets/gajanan-food-logo-english.png';
+import logoMarathi from '../../assets/gajanan-food-logo-marathi.png';
 
 export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -71,14 +73,19 @@ export const Header = () => {
               </button>
             </div>
 
-            {/* Brand Logo */}
-            <Link to="/" className="flex flex-col text-left group">
-              <span className="font-serif font-bold text-2xl sm:text-3xl text-[#5E3718] tracking-wider leading-none group-hover:text-[#9A6428] transition-colors uppercase">
-                {businessConfig.brandName}
-              </span>
-              <span className="text-[9px] sm:text-[10px] text-[#777166] font-semibold tracking-[0.25em] uppercase mt-0.5">
-                {businessConfig.brandSubtext}
-              </span>
+            {/* Brand Logos (English & Marathi) */}
+            <Link to="/" className="flex items-center gap-2 sm:gap-3 group py-1 shrink-0">
+              <img
+                src={logoEnglish}
+                alt="Gajanan Pure & Homemade Services Logo"
+                className="h-11 sm:h-14 w-auto object-contain transition-transform group-hover:scale-102"
+              />
+              <div className="h-8 sm:h-10 w-[1px] bg-[#E8DDCF]" />
+              <img
+                src={logoMarathi}
+                alt="गजानन फुड्स मराठी लोगो"
+                className="h-16 sm:h-20 w-auto object-contain transition-transform group-hover:scale-102"
+              />
             </Link>
 
             {/* Center Desktop Navigation Links */}

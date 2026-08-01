@@ -68,12 +68,10 @@ export const ProductForm = () => {
     storageInstructions: 'Store in a cool, dry place away from direct sunlight.'
   });
 
-  // Size Variants State
-  const [sizes, setSizes] = useState([
-    { label: '250g', price: '', stock: 20 }
-  ]);
+  // Size Variants State (Optional - default empty)
+  const [sizes, setSizes] = useState([]);
 
-  // Weight Variants State
+  // Weight Variants State (Optional)
   const [weights, setWeights] = useState([]);
 
   // Images State
@@ -283,8 +281,8 @@ export const ProductForm = () => {
     const newErrors = {};
 
     if (!formData.name.trim()) newErrors.name = 'Product name is required';
-    if (!formData.basePrice || Number(formData.basePrice) < 0) {
-      newErrors.basePrice = 'Base price must be a valid non-negative number';
+    if (formData.basePrice !== '' && Number(formData.basePrice) < 0) {
+      newErrors.basePrice = 'Base price cannot be negative';
     }
 
     setErrors(newErrors);
@@ -325,6 +323,8 @@ export const ProductForm = () => {
 
       const payload = {
         ...formData,
+        basePrice: formData.basePrice !== '' ? Number(formData.basePrice) : 0,
+        salePrice: formData.salePrice !== '' ? Number(formData.salePrice) : 0,
         sizes: validSizes,
         weights: validWeights,
         images: existingImages,
@@ -527,16 +527,15 @@ export const ProductForm = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
-                  Base Price (₹) *
+                  Base Price (₹) (Optional)
                 </label>
                 <input
                   type="number"
                   name="basePrice"
-                  required
                   min="0"
                   value={formData.basePrice}
                   onChange={handleChange}
-                  placeholder="550"
+                  placeholder="550 (Optional)"
                   className="w-full px-3.5 py-2.5 bg-[#FFFBF5] border border-[#E8DDCF] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#9A6428]"
                 />
                 {errors.basePrice && <p className="text-xs text-red-600 font-bold">{errors.basePrice}</p>}
@@ -576,7 +575,7 @@ export const ProductForm = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
-                  Product Status *
+                  Product Status (Optional)
                 </label>
                 <select
                   name="status"
