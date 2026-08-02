@@ -5,14 +5,16 @@ import { settingsApi } from '../../api/settingsApi';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=1920';
 
+const DEFAULT_HERO = {
+  heroImage: DEFAULT_HERO_IMAGE,
+  heroTitle: 'Discover the Essence of Fresh Spices & Pickles with Gajanan Spices',
+  heroSubtitle: 'Handpicked ingredients, traditional recipes and authentic flavours crafted by Gajanan Spices to make every meal memorable.',
+  heroBadge: 'Gajanan Spices • 100% Pure & Handcrafted',
+  heroCtaText: 'Shop Spices & Pickles'
+};
+
 export const HeroSection = () => {
-  const [heroSettings, setHeroSettings] = useState({
-    heroImage: DEFAULT_HERO_IMAGE,
-    heroTitle: 'Discover the Essence of Fresh Spices & Pickles',
-    heroSubtitle: 'Handpicked ingredients, traditional recipes and authentic flavours crafted to make every meal memorable.',
-    heroBadge: '100% Pure & Handcrafted',
-    heroCtaText: 'Shop Spices & Pickles'
-  });
+  const [heroSettings, setHeroSettings] = useState(DEFAULT_HERO);
   const [heroImgSrc, setHeroImgSrc] = useState(DEFAULT_HERO_IMAGE);
 
   useEffect(() => {
@@ -20,7 +22,28 @@ export const HeroSection = () => {
       try {
         const res = await settingsApi.getHeroSettings();
         if (res.success && res.data) {
-          setHeroSettings(res.data);
+          let title = res.data.heroTitle || DEFAULT_HERO.heroTitle;
+          let subtitle = res.data.heroSubtitle || DEFAULT_HERO.heroSubtitle;
+          let badge = res.data.heroBadge || DEFAULT_HERO.heroBadge;
+
+          if (!title.toLowerCase().includes('gajanan spices')) {
+            title = 'Discover the Essence of Fresh Spices & Pickles with Gajanan Spices';
+          }
+          if (!subtitle.toLowerCase().includes('gajanan spices')) {
+            subtitle = 'Handpicked ingredients, traditional recipes and authentic flavours crafted by Gajanan Spices to make every meal memorable.';
+          }
+          if (!badge.toLowerCase().includes('gajanan spices')) {
+            badge = 'Gajanan Spices • 100% Pure & Handcrafted';
+          }
+
+          const updated = {
+            ...res.data,
+            heroTitle: title,
+            heroSubtitle: subtitle,
+            heroBadge: badge
+          };
+
+          setHeroSettings(updated);
           if (res.data.heroImage) {
             setHeroImgSrc(res.data.heroImage);
           }

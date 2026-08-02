@@ -18,9 +18,9 @@ const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1596040033229-a982
 export const AdminHeroSettings = () => {
   const [heroSettings, setHeroSettings] = useState({
     heroImage: DEFAULT_HERO_IMAGE,
-    heroTitle: 'Discover the Essence of Fresh Spices & Pickles',
-    heroSubtitle: 'Handpicked ingredients, traditional recipes and authentic flavours crafted to make every meal memorable.',
-    heroBadge: '100% Pure & Handcrafted',
+    heroTitle: 'Discover the Essence of Fresh Spices & Pickles with Gajanan Spices',
+    heroSubtitle: 'Handpicked ingredients, traditional recipes and authentic flavours crafted by Gajanan Spices to make every meal memorable.',
+    heroBadge: 'Gajanan Spices • 100% Pure & Handcrafted',
     heroCtaText: 'Shop Spices & Pickles'
   });
 
