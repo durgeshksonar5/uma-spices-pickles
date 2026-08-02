@@ -64,7 +64,8 @@ export const getProducts = async (req, res, next) => {
     if (mongoose.connection.readyState === 1) {
       const query = {};
       if (req.query.category && req.query.category !== 'all') {
-        query.category = req.query.category.toLowerCase();
+        const cleanCat = req.query.category.toLowerCase().trim().replace(/-+$/g, '');
+        query.category = { $regex: new RegExp(cleanCat, 'i') };
       }
       if (req.query.search) {
         const searchRegex = new RegExp(req.query.search, 'i');
@@ -130,7 +131,12 @@ export const getProducts = async (req, res, next) => {
     let filtered = [...db.products];
 
     if (req.query.category && req.query.category !== 'all') {
-      filtered = filtered.filter((p) => p.category && p.category.toLowerCase().trim() === req.query.category.toLowerCase().trim());
+      const cleanCat = req.query.category.toLowerCase().trim().replace(/-+$/g, '');
+      filtered = filtered.filter((p) => {
+        if (!p.category) return false;
+        const pNorm = p.category.toLowerCase().trim().replace(/-+$/g, '');
+        return pNorm === cleanCat || pNorm.includes(cleanCat) || cleanCat.includes(pNorm);
+      });
     }
 
     if (req.query.search) {

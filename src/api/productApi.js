@@ -43,6 +43,18 @@ const saveCustomProduct = (newProd) => {
   } catch (e) {}
 };
 
+const normalizeCat = (cat) => (cat || '').toLowerCase().trim().replace(/-+$/g, '');
+
+const isCategoryMatch = (prodCat, targetCat) => {
+  if (!targetCat || targetCat === 'all') return true;
+  if (!prodCat) return false;
+  const pNorm = normalizeCat(prodCat);
+  const tNorm = normalizeCat(targetCat);
+  if (pNorm === tNorm) return true;
+  if (pNorm.includes(tNorm) || tNorm.includes(pNorm)) return true;
+  return false;
+};
+
 export const productApi = {
   // GET all products with parameters
   getProducts: async (params = {}) => {
@@ -72,8 +84,7 @@ export const productApi = {
 
         // Strict Category Filter
         if (params.category && params.category !== 'all') {
-          const targetCat = params.category.toLowerCase().trim();
-          filtered = filtered.filter((p) => p.category && p.category.toLowerCase().trim() === targetCat);
+          filtered = filtered.filter((p) => isCategoryMatch(p.category, params.category));
         }
 
         // Strict Sorting Filter
@@ -122,8 +133,7 @@ export const productApi = {
       );
 
       if (params.category && params.category !== 'all') {
-        const targetCat = params.category.toLowerCase().trim();
-        filtered = filtered.filter((p) => p.category && p.category.toLowerCase().trim() === targetCat);
+        filtered = filtered.filter((p) => isCategoryMatch(p.category, params.category));
       }
 
       if (params.sort) {

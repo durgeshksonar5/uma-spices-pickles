@@ -5,7 +5,7 @@ import { ProductCard } from '../components/products/ProductCard';
 import { productApi } from '../api/productApi';
 import { categories } from '../data/categories';
 import { ProductGridSkeleton } from '../components/common/LoadingSkeleton';
-import { Sparkles, ArrowUpDown, RefreshCw } from 'lucide-react';
+import { Sparkles, ArrowUpDown, RefreshCw, Filter } from 'lucide-react';
 
 export const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -59,7 +59,11 @@ export const Shop = () => {
     setSearchParams(newParams);
   };
 
-  const activeCategoryObj = categories.find((c) => c.slug === selectedCategory);
+  const activeCategoryObj = categories.find(
+    (c) =>
+      c.slug === selectedCategory ||
+      c.slug.replace(/-+$/, '') === selectedCategory.replace(/-+$/, '')
+  );
   const categoryTitle = activeCategoryObj ? activeCategoryObj.name : 'All Spices, Pickles & Blends';
 
   return (
@@ -87,10 +91,10 @@ export const Shop = () => {
           </div>
         </div>
 
-        {/* 3 Main Category Tabs Bar */}
+        {/* Category Tabs & Controls Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#FFFBF5] p-3 rounded-2xl border border-[#E8DDCF] shadow-xs">
-          {/* Category Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
+          {/* Category Filter Controls: All Products Button + Category Dropdown */}
+          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
             <button
               onClick={() => handleCategoryChange('all')}
               className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
@@ -103,24 +107,39 @@ export const Shop = () => {
               <span>All Products</span>
             </button>
 
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => handleCategoryChange(cat.slug)}
-                className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
-                  selectedCategory === cat.slug
-                    ? 'bg-[#9A6428] text-white shadow-xs'
-                    : 'bg-white text-[#171717] border border-[#E8DDCF] hover:bg-[#F9EFDD]/60'
-                }`}
+            {/* Category Dropdown */}
+            <div
+              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border transition-all shrink-0 ${
+                selectedCategory !== 'all'
+                  ? 'bg-[#9A6428]/10 border-[#9A6428]'
+                  : 'bg-white border-[#E8DDCF]'
+              }`}
+            >
+              <Filter className="w-4 h-4 text-[#9A6428]" />
+              <select
+                value={
+                  activeCategoryObj
+                    ? activeCategoryObj.slug
+                    : selectedCategory === 'all'
+                    ? 'all'
+                    : selectedCategory
+                }
+                onChange={(e) => handleCategoryChange(e.target.value)}
+                className="text-xs sm:text-sm font-bold text-[#171717] bg-transparent focus:outline-none cursor-pointer pr-1"
               >
-                <span>{cat.name}</span>
-              </button>
-            ))}
+                <option value="all">All Categories</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.slug} className="text-[#171717]">
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Controls: Sort Dropdown */}
           <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-            <div className="flex items-center gap-1.5 bg-white px-3.5 py-2 rounded-xl border border-[#E8DDCF] shrink-0">
+            <div className="flex items-center gap-1.5 bg-white px-3.5 py-2.5 rounded-xl border border-[#E8DDCF] shrink-0">
               <ArrowUpDown className="w-3.5 h-3.5 text-[#9A6428]" />
               <select
                 value={sortBy}
