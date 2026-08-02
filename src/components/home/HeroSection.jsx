@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Leaf, Award, Utensils, Sparkles } from 'lucide-react';
 import { settingsApi } from '../../api/settingsApi';
+import heroImageNew from '../../assets/hero-image-new.png';
 
-const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=1920';
+const DEFAULT_HERO_IMAGE = heroImageNew;
 
 const DEFAULT_HERO = {
   heroImage: DEFAULT_HERO_IMAGE,
@@ -25,6 +26,11 @@ export const HeroSection = () => {
           let title = res.data.heroTitle || DEFAULT_HERO.heroTitle;
           let subtitle = res.data.heroSubtitle || DEFAULT_HERO.heroSubtitle;
           let badge = res.data.heroBadge || DEFAULT_HERO.heroBadge;
+          let image = res.data.heroImage;
+
+          if (!image || image.includes('unsplash.com')) {
+            image = DEFAULT_HERO_IMAGE;
+          }
 
           if (!title.toLowerCase().includes('gajanan spices')) {
             title = 'Discover the Essence of Fresh Spices & Pickles with Gajanan Spices';
@@ -38,15 +44,14 @@ export const HeroSection = () => {
 
           const updated = {
             ...res.data,
+            heroImage: image,
             heroTitle: title,
             heroSubtitle: subtitle,
             heroBadge: badge
           };
 
           setHeroSettings(updated);
-          if (res.data.heroImage) {
-            setHeroImgSrc(res.data.heroImage);
-          }
+          setHeroImgSrc(image);
         }
       } catch (err) {
         console.error('Failed to load hero banner settings:', err);

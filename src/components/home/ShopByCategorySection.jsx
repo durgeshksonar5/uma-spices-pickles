@@ -56,7 +56,7 @@ export const ShopByCategorySection = () => {
       title: 'ALL PRODUCTS',
       itemCount: `${allProductsCount || 18} items`,
       link: '/shop',
-      image: 'https://images.unsplash.com/photo-1509358271058-acd22cc93898?auto=format&fit=crop&q=80&w=600',
+      image: spicesImg,
       alt: 'All Products Collection'
     },
     ...categories.map((cat) => {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { HeroSection } from '../components/home/HeroSection';
 import { ShopByCategorySection } from '../components/home/ShopByCategorySection';
+import { ProductCatalogueSection } from '../components/home/ProductCatalogueSection';
 import { BestSellersSection } from '../components/home/BestSellersSection';
 import { AdBannersSection } from '../components/home/AdBannersSection';
 import { CustomerReviewsSection } from '../components/home/CustomerReviewsSection';
@@ -18,7 +19,10 @@ export const Home = () => {
       {/* 3. Explore Our Collections Section (Circular cutout 4-card grid) */}
       <ShopByCategorySection />
 
-      {/* 4. Advertising Banners Section (4 Ad Images - 2 per line) */}
+      {/* 4. Complete Product Catalogue Section */}
+      <ProductCatalogueSection />
+
+      {/* 5. Advertising Banners Section (4 Ad Images - 2 per line) */}
       <AdBannersSection />
 
       {/* 5. Customer Testimonials Section */}

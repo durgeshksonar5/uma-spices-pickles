@@ -12,8 +12,9 @@ import {
   Check,
   Eye
 } from 'lucide-react';
+import heroImageNew from '../../assets/hero-image-new.png';
 
-const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=1920';
+const DEFAULT_HERO_IMAGE = heroImageNew;
 
 export const AdminHeroSettings = () => {
   const [heroSettings, setHeroSettings] = useState({

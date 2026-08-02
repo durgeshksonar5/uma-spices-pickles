@@ -1,7 +1,8 @@
 import { apiClient } from './apiClient';
+import heroImageNew from '../assets/hero-image-new.png';
 
 const DEFAULT_HERO = {
-  heroImage: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=1920',
+  heroImage: heroImageNew,
   heroTitle: 'Discover the Essence of Fresh Spices & Pickles with Gajanan Spices',
   heroSubtitle: 'Handpicked ingredients, traditional recipes and authentic flavours crafted by Gajanan Spices to make every meal memorable.',
   heroBadge: 'Gajanan Spices • 100% Pure & Handcrafted',
