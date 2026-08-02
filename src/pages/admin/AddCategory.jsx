@@ -14,7 +14,9 @@ import {
   Grid,
   Layers,
   Trash2,
-  Edit2
+  Edit2,
+  Upload,
+  X
 } from 'lucide-react';
 
 const PRESET_IMAGES = [
@@ -53,6 +55,9 @@ export const AddCategory = () => {
   const [editId, setEditId] = useState(null);
   const [categoriesList, setCategoriesList] = useState([...categories]);
 
+  const [uploadedImagePreview, setUploadedImagePreview] = useState('');
+  const [uploadedFileName, setUploadedFileName] = useState('');
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -70,6 +75,8 @@ export const AddCategory = () => {
   };
 
   const handleSelectPresetImage = (url) => {
+    setUploadedImagePreview('');
+    setUploadedFileName('');
     setFormData((prev) => ({
       ...prev,
       image: url,
@@ -77,20 +84,62 @@ export const AddCategory = () => {
     }));
   };
 
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.match(/image\/(jpeg|jpg|png|webp)/)) {
+      showToast('Please select a valid JPG, PNG, or WebP image file.', 'error');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image file size should be less than 5MB.', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result;
+      setUploadedImagePreview(base64);
+      setUploadedFileName(file.name);
+      setFormData((prev) => ({
+        ...prev,
+        image: base64,
+        customImageUrl: ''
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveUploadedImage = () => {
+    setUploadedImagePreview('');
+    setUploadedFileName('');
+    setFormData((prev) => ({
+      ...prev,
+      image: PRESET_IMAGES[0].url
+    }));
+  };
+
   const handleEdit = (cat) => {
     setEditId(cat.id);
+    const isBase64 = cat.image?.startsWith('data:image/');
+    const isUnsplash = cat.image?.startsWith('https://images.unsplash.com');
+    setUploadedImagePreview(isBase64 ? cat.image : '');
+    setUploadedFileName(isBase64 ? 'Uploaded Image' : '');
     setFormData({
       name: cat.name,
       description: cat.description,
       image: cat.image,
       icon: cat.icon || 'Sparkles',
-      customImageUrl: cat.image.startsWith('https://images.unsplash.com') ? '' : cat.image
+      customImageUrl: (!isUnsplash && !isBase64) ? cat.image : ''
     });
     setErrors({});
   };
 
   const handleCancelEdit = () => {
     setEditId(null);
+    setUploadedImagePreview('');
+    setUploadedFileName('');
     setFormData({
       name: '',
       description: '',
@@ -183,6 +232,8 @@ export const AddCategory = () => {
         showToast('Category added successfully!', 'success');
       }
 
+      setUploadedImagePreview('');
+      setUploadedFileName('');
       setFormData({
         name: '',
         description: '',
@@ -300,7 +351,7 @@ export const AddCategory = () => {
               
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {PRESET_IMAGES.map((img) => {
-                  const isSelected = formData.image === img.url && !formData.customImageUrl;
+                  const isSelected = formData.image === img.url && !formData.customImageUrl && !uploadedImagePreview;
                   return (
                     <button
                       key={img.name}
@@ -317,6 +368,40 @@ export const AddCategory = () => {
                     </button>
                   );
                 })}
+              </div>
+
+              {/* Upload Category Image File Field */}
+              <div className="space-y-1 pt-1">
+                <label className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
+                  Or Upload Category Image
+                </label>
+                <div className="border-2 border-dashed border-[#9A6428]/40 rounded-xl p-3 bg-[#FFFBF5] text-center hover:bg-[#F9EFDD]/30 transition-colors relative">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handleFileSelect}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  />
+                  <div className="flex items-center justify-center gap-2">
+                    <Upload className="w-4 h-4 text-[#9A6428]" />
+                    <span className="text-xs font-bold text-[#5E3718]">
+                      {uploadedFileName ? uploadedFileName : 'Click or Drag to Upload Image File'}
+                    </span>
+                  </div>
+                </div>
+                {uploadedImagePreview && (
+                  <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-[#E8DDCF] mt-2">
+                    <img src={uploadedImagePreview} alt="Uploaded preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={handleRemoveUploadedImage}
+                      className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full shadow-xs cursor-pointer z-20 hover:bg-red-700 transition-colors"
+                      title="Remove image"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-1 pt-1">

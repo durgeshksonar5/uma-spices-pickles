@@ -1,38 +1,74 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { categories } from '../../data/categories';
+import { productApi } from '../../api/productApi';
+import spicesImg from '../../assets/spices.jpeg';
+import picklesImg from '../../assets/pickels.jpeg';
+import blendsImg from '../../assets/products/masale-pickels.jpeg';
+import ladooImg from '../../assets/products/methi-ladoo---1785662402014-0.jpeg';
+import shevayaImg from '../../assets/products/shevaya--1785662264363-0.jpeg';
+import jamImg from '../../assets/products/amla-jam---1785661779717-0.png';
+import candyImg from '../../assets/products/premium-amla-candy---1785660828907-0.png';
+import juiceImg from '../../assets/products/premium-amla-juice---1785661139836-0.png';
+import murabbaImg from '../../assets/products/premium-amla-murabba---1785661432325-0.png';
+
+const categoryImageMap = {
+  spices: spicesImg,
+  pickles: picklesImg,
+  blends: blendsImg,
+  'amla-candy': candyImg,
+  juice: juiceImg,
+  murabba: murabbaImg,
+  jam: jamImg,
+  shevaya: shevayaImg,
+  ladoo: ladooImg
+};
 
 export const ShopByCategorySection = () => {
-  // 4 Featured Collection Cards matching the reference layout strictly
+  const [productCounts, setProductCounts] = useState({});
+  const [allProductsCount, setAllProductsCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const res = await productApi.getProducts({ limit: 200, status: 'published' });
+        if (res && res.data) {
+          const counts = {};
+          res.data.forEach((p) => {
+            if (p.category) {
+              const catSlug = p.category.toLowerCase().trim().replace(/-+$/g, '');
+              counts[catSlug] = (counts[catSlug] || 0) + 1;
+            }
+          });
+          setProductCounts(counts);
+          setAllProductsCount(res.data.length);
+        }
+      } catch (err) {
+        console.error('Error fetching product counts for categories:', err);
+      }
+    };
+    fetchCounts();
+  }, []);
+
   const collections = [
     {
-      title: "PURE SPICES",
-      itemCount: "7 items",
-      link: "/shop?category=spices",
-      image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=600",
-      alt: "Pure Spices Collection"
+      title: 'ALL PRODUCTS',
+      itemCount: `${allProductsCount || 18} items`,
+      link: '/shop',
+      image: 'https://images.unsplash.com/photo-1509358271058-acd22cc93898?auto=format&fit=crop&q=80&w=600',
+      alt: 'All Products Collection'
     },
-    {
-      title: "ALL PRODUCTS",
-      itemCount: "18 items",
-      link: "/shop",
-      image: "https://images.unsplash.com/photo-1509358271058-acd22cc93898?auto=format&fit=crop&q=80&w=600",
-      alt: "All Products Collection"
-    },
-    {
-      title: "TRADITIONAL PICKLES",
-      itemCount: "6 items",
-      link: "/shop?category=pickles",
-      image: "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&q=80&w=600",
-      alt: "Traditional Pickles Collection"
-    },
-    {
-      title: "MASALA BLENDS",
-      itemCount: "5 items",
-      link: "/shop?category=blends",
-      image: "https://images.unsplash.com/photo-1532336414038-cf19250c5757?auto=format&fit=crop&q=80&w=600",
-      alt: "Masala Blends Collection"
-    }
+    ...categories.map((cat) => {
+      const count = productCounts[cat.slug] || 0;
+      return {
+        title: cat.name.toUpperCase(),
+        itemCount: `${count} ${count === 1 ? 'item' : 'items'}`,
+        link: `/shop?category=${cat.slug}`,
+        image: categoryImageMap[cat.slug] || cat.image || spicesImg,
+        alt: `${cat.name} Collection`
+      };
+    })
   ];
 
   return (
@@ -57,7 +93,7 @@ export const ShopByCategorySection = () => {
           </Link>
         </div>
 
-        {/* 4 Circular Collection Cards Grid */}
+        {/* Collection Cards Grid: 4 cards per row */}
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           {collections.map((item) => (
             <Link
