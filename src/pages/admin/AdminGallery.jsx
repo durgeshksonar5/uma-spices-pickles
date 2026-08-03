@@ -33,6 +33,7 @@ export const AdminGallery = () => {
     galleryItems,
     loading,
     error,
+    storageSource,
     addImages,
     updateImage,
     replaceImage,
@@ -417,13 +418,20 @@ export const AdminGallery = () => {
         </div>
       </div>
 
-      {/* Browser Local Storage Info Banner */}
+      {/* Storage Mode Status Banner */}
       <div className="bg-[#FFFBF5] border border-[#9A6428]/30 rounded-xl p-3.5 flex items-start gap-3 text-xs text-[#5E3718]">
         <Info className="w-5 h-5 text-[#9A6428] shrink-0 mt-0.5" />
         <div className="space-y-0.5">
-          <p className="font-bold">Frontend-Only IndexedDB Storage Active</p>
+          <p className="font-bold flex items-center gap-2">
+            <span>{storageSource === 'vercel_blob' ? 'Vercel Blob Public Cloud Storage Active' : 'IndexedDB Local Fallback Active'}</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${storageSource === 'vercel_blob' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+              {storageSource === 'vercel_blob' ? 'Cloud Connected' : 'Local Fallback'}
+            </span>
+          </p>
           <p className="text-[#777166]">
-            Photos are saved locally inside browser storage (`gajananGalleryDB`). They will appear on this browser session and survive page refreshes. Use <span className="font-semibold text-[#5E3718]">Export Backup</span> to save or transfer photos across devices.
+            {storageSource === 'vercel_blob'
+              ? 'Uploaded photos are stored under prefix `gallery/` in Vercel Blob store and persist permanently across all devices, browsers, and site redeployments.'
+              : 'Running in local fallback mode. Configure `BLOB_READ_WRITE_TOKEN` in your Vercel project storage settings to enable direct cloud uploads across all devices.'}
           </p>
         </div>
       </div>

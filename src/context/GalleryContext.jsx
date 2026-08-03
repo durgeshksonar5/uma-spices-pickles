@@ -1,12 +1,17 @@
 import React, { createContext, useState, useEffect, useRef, useCallback } from 'react';
 import {
+  fetchGalleryFromApi,
+  uploadToVercelBlob,
+  saveGalleryManifestToApi,
+  deleteGalleryImageFromApi
+} from '../api/galleryApi';
+import {
   getAllGalleryImages,
-  addGalleryImage,
   addMultipleGalleryImages,
   updateGalleryImage,
-  deleteGalleryImage,
+  deleteGalleryImage as deleteIndexedDBImage,
   clearGalleryImages,
-  reorderGalleryImages
+  reorderGalleryImages as reorderIndexedDBImages
 } from '../services/galleryStorage';
 import { optimizeImage, blobToBase64, dataURLToBlob } from '../utils/imageOptimizer';
 
@@ -19,95 +24,102 @@ export const GalleryProvider = ({ children }) => {
   const [galleryItems, setGalleryItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [storageSource, setStorageSource] = useState('vercel_blob'); // 'vercel_blob' or 'indexeddb'
 
-  // Map of id -> objectUrl to manage memory cleanup
+  // Map of id -> objectUrl (for local IndexedDB fallback blobs)
   const objectUrlsMapRef = useRef(new Map());
   const broadcastChannelRef = useRef(null);
 
-  // Clean up all generated Object URLs
   const cleanupAllObjectUrls = useCallback(() => {
     objectUrlsMapRef.current.forEach((url) => {
       try {
         URL.revokeObjectURL(url);
-      } catch (e) {
-        console.warn('Error revoking Object URL:', e);
-      }
+      } catch (e) {}
     });
     objectUrlsMapRef.current.clear();
   }, []);
 
-  // Revoke a single Object URL by ID
   const revokeObjectUrlForId = useCallback((id) => {
     if (objectUrlsMapRef.current.has(id)) {
       const url = objectUrlsMapRef.current.get(id);
       try {
         URL.revokeObjectURL(url);
-      } catch (e) {
-        console.warn('Error revoking Object URL:', e);
-      }
+      } catch (e) {}
       objectUrlsMapRef.current.delete(id);
     }
   }, []);
 
-  // Broadcast sync signal to other tabs/components
   const notifyGalleryChanged = useCallback(() => {
     if (broadcastChannelRef.current) {
       try {
         broadcastChannelRef.current.postMessage({ type: 'GALLERY_MUTATED', timestamp: Date.now() });
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
     }
     window.dispatchEvent(new CustomEvent(CUSTOM_EVENT_NAME));
   }, []);
 
-  // Load gallery from IndexedDB and manage Object URLs
+  // Load gallery items from Vercel Blob or local IndexedDB
   const loadGallery = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const rawRecords = await getAllGalleryImages();
+      const result = await fetchGalleryFromApi();
+      setStorageSource(result.source || 'vercel_blob');
 
-      // Track active IDs to clean up removed item URLs
-      const newIdsSet = new Set(rawRecords.map((r) => r.id));
+      if (result.source === 'indexeddb') {
+        const rawRecords = result.images || [];
+        const newIdsSet = new Set(rawRecords.map((r) => r.id));
 
-      // Revoke URLs for items that no longer exist
-      objectUrlsMapRef.current.forEach((url, id) => {
-        if (!newIdsSet.has(id)) {
-          revokeObjectUrlForId(id);
-        }
-      });
-
-      // Attach or create object URLs
-      const processedItems = rawRecords.map((item) => {
-        let objectUrl = objectUrlsMapRef.current.get(item.id);
-
-        if (!objectUrl && item.imageBlob) {
-          try {
-            objectUrl = URL.createObjectURL(item.imageBlob);
-            objectUrlsMapRef.current.set(item.id, objectUrl);
-          } catch (e) {
-            console.error('Failed to create Object URL for item', item.id, e);
+        objectUrlsMapRef.current.forEach((url, id) => {
+          if (!newIdsSet.has(id)) {
+            revokeObjectUrlForId(id);
           }
-        }
+        });
 
-        return {
+        const processedItems = rawRecords.map((item) => {
+          let objectUrl = objectUrlsMapRef.current.get(item.id);
+          if (!objectUrl && item.imageBlob) {
+            try {
+              objectUrl = URL.createObjectURL(item.imageBlob);
+              objectUrlsMapRef.current.set(item.id, objectUrl);
+            } catch (e) {}
+          }
+          return {
+            ...item,
+            imageUrl: objectUrl || item.imageUrl || ''
+          };
+        });
+
+        setGalleryItems(processedItems);
+      } else {
+        // Vercel Blob items already have permanent public URLs
+        const items = (result.images || []).map((item, index) => ({
           ...item,
-          imageUrl: objectUrl || ''
-        };
-      });
+          id: item.id || `img_blob_${index}`,
+          imageUrl: item.url || item.imageUrl || '',
+          displayOrder: typeof item.displayOrder === 'number' ? item.displayOrder : index,
+          isActive: typeof item.isActive === 'boolean' ? item.isActive : true
+        }));
 
-      setGalleryItems(processedItems);
+        // Sort by displayOrder ascending, then createdAt descending
+        items.sort((a, b) => {
+          const orderA = Number(a.displayOrder ?? 0);
+          const orderB = Number(b.displayOrder ?? 0);
+          if (orderA !== orderB) return orderA - orderB;
+          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+        });
+
+        setGalleryItems(items);
+      }
     } catch (err) {
-      console.error('Failed to load gallery from IndexedDB:', err);
-      setError(err.message || 'Failed to load gallery images from browser storage.');
+      console.error('Failed to load gallery:', err);
+      setError(err.message || 'Failed to load gallery photos.');
       setGalleryItems([]);
     } finally {
       setLoading(false);
     }
   }, [revokeObjectUrlForId]);
 
-  // Set up broadcast channel and window listener for cross-tab sync
   useEffect(() => {
     loadGallery();
 
@@ -137,13 +149,12 @@ export const GalleryProvider = ({ children }) => {
   }, [loadGallery, cleanupAllObjectUrls]);
 
   /**
-   * Add multiple images from File object list with optional default metadata
+   * Add multiple images (Vercel Blob upload with fallback to IndexedDB)
    */
   const addImages = async (filesList, defaultMetadata = {}) => {
     if (!filesList || filesList.length === 0) return [];
-
     const files = Array.from(filesList);
-    const optimizedItems = [];
+    const addedRecords = [];
     const errors = [];
 
     for (let i = 0; i < files.length; i++) {
@@ -151,12 +162,30 @@ export const GalleryProvider = ({ children }) => {
       try {
         const opt = await optimizeImage(file);
 
-        // Derive title from filename without extension if not provided
         const nameWithoutExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
         const formattedTitle = nameWithoutExt.replace(/[-_]/g, ' ');
 
-        optimizedItems.push({
-          imageBlob: opt.blob,
+        let blobUrl = '';
+        let pathname = '';
+
+        // Try Vercel Blob Upload
+        try {
+          const blobRes = await uploadToVercelBlob(opt.blob);
+          blobUrl = blobRes.url;
+          pathname = blobRes.pathname;
+        } catch (blobErr) {
+          console.warn('Vercel Blob upload unavailable, storing locally:', blobErr.message);
+        }
+
+        const now = new Date().toISOString();
+        const id = `img_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 6)}`;
+
+        const record = {
+          id,
+          url: blobUrl,
+          imageUrl: blobUrl,
+          pathname: pathname || `gallery/gallery-${Date.now()}-${file.name}`,
+          imageBlob: !blobUrl ? opt.blob : null,
           originalFileName: opt.originalFileName,
           mimeType: opt.mimeType,
           fileSize: opt.size,
@@ -164,16 +193,27 @@ export const GalleryProvider = ({ children }) => {
           altText: defaultMetadata.altText || formattedTitle,
           caption: defaultMetadata.caption || '',
           category: defaultMetadata.category || 'General',
-          displayOrder: defaultMetadata.displayOrder ?? galleryItems.length + i,
-          isActive: typeof defaultMetadata.isActive === 'boolean' ? defaultMetadata.isActive : true
-        });
+          displayOrder: (defaultMetadata.displayOrder ?? galleryItems.length) + i,
+          isActive: typeof defaultMetadata.isActive === 'boolean' ? defaultMetadata.isActive : true,
+          createdAt: now,
+          updatedAt: now
+        };
+
+        addedRecords.push(record);
       } catch (err) {
         errors.push(`"${file.name}": ${err.message}`);
       }
     }
 
-    if (optimizedItems.length > 0) {
-      await addMultipleGalleryImages(optimizedItems);
+    if (addedRecords.length > 0) {
+      if (storageSource === 'indexeddb' || addedRecords.some((r) => r.imageBlob)) {
+        await addMultipleGalleryImages(addedRecords);
+      }
+
+      // Update Vercel Blob Manifest
+      const newItemsList = [...galleryItems, ...addedRecords];
+      await saveGalleryManifestToApi(newItemsList);
+
       notifyGalleryChanged();
       await loadGallery();
     }
@@ -182,44 +222,105 @@ export const GalleryProvider = ({ children }) => {
       throw new Error(errors.join('\n'));
     }
 
-    return optimizedItems;
+    return addedRecords;
   };
 
   /**
    * Update existing image metadata
    */
   const updateImage = async (id, metadataUpdates) => {
-    await updateGalleryImage(id, metadataUpdates);
+    const updatedList = galleryItems.map((item) => {
+      if (item.id === id) {
+        return {
+          ...item,
+          ...metadataUpdates,
+          updatedAt: new Date().toISOString()
+        };
+      }
+      return item;
+    });
+
+    setGalleryItems(updatedList);
+
+    if (storageSource === 'indexeddb') {
+      await updateGalleryImage(id, metadataUpdates);
+    }
+
+    await saveGalleryManifestToApi(updatedList);
     notifyGalleryChanged();
     await loadGallery();
   };
 
   /**
-   * Replace existing image file and metadata
+   * Replace existing image
    */
   const replaceImage = async (id, newFile, metadataUpdates = {}) => {
+    const existing = galleryItems.find((i) => i.id === id);
     const opt = await optimizeImage(newFile);
-    revokeObjectUrlForId(id);
 
-    const updates = {
+    let blobUrl = '';
+    let pathname = '';
+
+    try {
+      const blobRes = await uploadToVercelBlob(opt.blob);
+      blobUrl = blobRes.url;
+      pathname = blobRes.pathname;
+    } catch (e) {
+      console.warn('Vercel Blob upload failed on replace, updating locally:', e.message);
+    }
+
+    // Delete old Vercel Blob file if present
+    if (existing && existing.url && blobUrl) {
+      deleteGalleryImageFromApi(existing).catch(() => {});
+    }
+
+    const now = new Date().toISOString();
+    const updatedRecord = {
+      ...existing,
       ...metadataUpdates,
-      imageBlob: opt.blob,
+      id,
+      url: blobUrl || existing?.url || '',
+      imageUrl: blobUrl || existing?.imageUrl || '',
+      pathname: pathname || existing?.pathname || '',
+      imageBlob: !blobUrl ? opt.blob : null,
       originalFileName: opt.originalFileName,
       mimeType: opt.mimeType,
-      fileSize: opt.size
+      fileSize: opt.size,
+      updatedAt: now
     };
 
-    await updateGalleryImage(id, updates);
+    const updatedList = galleryItems.map((item) => (item.id === id ? updatedRecord : item));
+
+    if (storageSource === 'indexeddb') {
+      revokeObjectUrlForId(id);
+      await updateGalleryImage(id, updatedRecord);
+    }
+
+    await saveGalleryManifestToApi(updatedList);
     notifyGalleryChanged();
     await loadGallery();
   };
 
   /**
-   * Delete an image
+   * Delete image
    */
   const deleteImage = async (id) => {
-    revokeObjectUrlForId(id);
-    await deleteGalleryImage(id);
+    const existing = galleryItems.find((i) => i.id === id);
+
+    if (existing) {
+      if (existing.url || existing.pathname) {
+        deleteGalleryImageFromApi(existing).catch(() => {});
+      }
+      if (storageSource === 'indexeddb') {
+        revokeObjectUrlForId(id);
+        await deleteIndexedDBImage(id);
+      }
+    }
+
+    const updatedList = galleryItems.filter((item) => item.id !== id);
+    setGalleryItems(updatedList);
+    await saveGalleryManifestToApi(updatedList);
+
     notifyGalleryChanged();
     await loadGallery();
   };
@@ -230,136 +331,46 @@ export const GalleryProvider = ({ children }) => {
   const toggleActiveStatus = async (id) => {
     const item = galleryItems.find((i) => i.id === id);
     if (!item) return;
-    await updateGalleryImage(id, { isActive: !item.isActive });
-    notifyGalleryChanged();
-    await loadGallery();
+    await updateImage(id, { isActive: !item.isActive });
   };
 
   /**
    * Reorder images
    */
   const reorderImages = async (orderedIds) => {
-    await reorderGalleryImages(orderedIds);
-    notifyGalleryChanged();
-    await loadGallery();
-  };
+    const updatedList = orderedIds
+      .map((id, index) => {
+        const item = galleryItems.find((i) => i.id === id);
+        if (item) {
+          return { ...item, displayOrder: index, updatedAt: new Date().toISOString() };
+        }
+        return null;
+      })
+      .filter(Boolean);
 
-  /**
-   * Export all images and metadata as downloadable JSON backup file
-   */
-  const exportBackup = async () => {
-    const rawItems = await getAllGalleryImages();
-    const backupData = {
-      app: 'GajananFoodsGalleryBackup',
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      count: rawItems.length,
-      items: []
-    };
+    setGalleryItems(updatedList);
 
-    for (const item of rawItems) {
-      let base64Data = '';
-      if (item.imageBlob) {
-        base64Data = await blobToBase64(item.imageBlob);
-      }
-      backupData.items.push({
-        id: item.id,
-        originalFileName: item.originalFileName,
-        mimeType: item.mimeType,
-        fileSize: item.fileSize,
-        title: item.title,
-        altText: item.altText,
-        caption: item.caption,
-        category: item.category,
-        displayOrder: item.displayOrder,
-        isActive: item.isActive,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-        base64Data
-      });
+    if (storageSource === 'indexeddb') {
+      await reorderIndexedDBImages(orderedIds);
     }
 
-    const jsonStr = JSON.stringify(backupData, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-
-    const dateStr = new Date().toISOString().slice(0, 10);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `gajanan_gallery_backup_${dateStr}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  /**
-   * Import JSON backup file
-   */
-  const importBackup = async (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        try {
-          const text = e.target.result;
-          const parsed = JSON.parse(text);
-
-          if (parsed.app !== 'GajananFoodsGalleryBackup' || !Array.isArray(parsed.items)) {
-            throw new Error('Invalid backup file format.');
-          }
-
-          // Clear existing
-          cleanupAllObjectUrls();
-          await clearGalleryImages();
-
-          const toAdd = [];
-          for (const item of parsed.items) {
-            if (!item.base64Data) continue;
-            const blob = dataURLToBlob(item.base64Data);
-            toAdd.push({
-              id: item.id,
-              imageBlob: blob,
-              originalFileName: item.originalFileName,
-              mimeType: item.mimeType,
-              fileSize: item.fileSize || blob.size,
-              title: item.title || '',
-              altText: item.altText || item.title || 'Gallery image',
-              caption: item.caption || '',
-              category: item.category || 'General',
-              displayOrder: typeof item.displayOrder === 'number' ? item.displayOrder : 0,
-              isActive: typeof item.isActive === 'boolean' ? item.isActive : true,
-              createdAt: item.createdAt || new Date().toISOString(),
-              updatedAt: item.updatedAt || new Date().toISOString()
-            });
-          }
-
-          await addMultipleGalleryImages(toAdd);
-          notifyGalleryChanged();
-          await loadGallery();
-
-          resolve(toAdd.length);
-        } catch (err) {
-          reject(new Error('Failed to parse or restore backup: ' + err.message));
-        }
-      };
-      reader.onerror = () => reject(new Error('Error reading backup file.'));
-      reader.readAsText(file);
-    });
+    await saveGalleryManifestToApi(updatedList);
+    notifyGalleryChanged();
+    await loadGallery();
   };
 
   const value = {
     galleryItems,
     loading,
     error,
+    storageSource,
     refreshGallery: loadGallery,
     addImages,
     updateImage,
     replaceImage,
     deleteImage,
     toggleActiveStatus,
-    reorderImages,
-    exportBackup,
-    importBackup
+    reorderImages
   };
 
   return <GalleryContext.Provider value={value}>{children}</GalleryContext.Provider>;
