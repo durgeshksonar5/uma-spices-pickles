@@ -22,7 +22,7 @@ export const HeroSection = () => {
     const fetchHeroData = async () => {
       try {
         const res = await settingsApi.getHeroSettings();
-        if (res.success && res.data) {
+        if (res?.success && res.data) {
           let title = res.data.heroTitle || DEFAULT_HERO.heroTitle;
           let subtitle = res.data.heroSubtitle || DEFAULT_HERO.heroSubtitle;
           let badge = res.data.heroBadge || DEFAULT_HERO.heroBadge;

@@ -36,7 +36,7 @@ export const AdminDashboard = () => {
     setIsLoading(true);
     try {
       const res = await productApi.getProducts({ admin: 'true', limit: 50 });
-      if (res.success && res.data) {
+      if (res?.success && Array.isArray(res.data)) {
         const prods = res.data;
         setStats({
           total: prods.length,

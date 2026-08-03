@@ -39,7 +39,7 @@ export const AdminProductsList = () => {
         category: categoryFilter !== 'all' ? categoryFilter : '',
         status: statusFilter !== 'all' ? statusFilter : ''
       });
-      if (res.success && res.data) {
+      if (res?.success && Array.isArray(res.data)) {
         setProducts(res.data);
       }
     } catch (err) {

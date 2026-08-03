@@ -33,7 +33,7 @@ export const ShopByCategorySection = () => {
     const fetchCounts = async () => {
       try {
         const res = await productApi.getProducts({ limit: 200, status: 'published' });
-        if (res && res.data) {
+        if (res?.success && Array.isArray(res.data)) {
           const counts = {};
           res.data.forEach((p) => {
             if (p.category) {

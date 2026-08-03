@@ -28,7 +28,7 @@ export const ChefsBundleSection = () => {
       setIsLoading(true);
       try {
         const res = await settingsApi.getFestiveDealSettings();
-        if (res.success && res.data) {
+        if (res?.success && res.data) {
           setDeal(res.data);
           if (res.data.image) setDealImageSrc(res.data.image);
         }

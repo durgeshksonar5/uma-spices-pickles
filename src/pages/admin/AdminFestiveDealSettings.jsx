@@ -43,7 +43,7 @@ export const AdminFestiveDealSettings = () => {
     setIsLoading(true);
     try {
       const res = await settingsApi.getFestiveDealSettings();
-      if (res.success && res.data) {
+      if (res?.success && res.data) {
         const data = res.data;
         setDealSettings(data);
         setImagePreview(data.image || DEFAULT_DEAL_IMAGE);

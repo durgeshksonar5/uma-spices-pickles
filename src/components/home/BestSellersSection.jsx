@@ -13,7 +13,7 @@ export const BestSellersSection = () => {
       setIsLoading(true);
       try {
         const res = await productApi.getProducts({ status: 'published', limit: 12 });
-        if (res.success && res.data) {
+        if (res?.success && Array.isArray(res.data)) {
           // Select products tagged as best seller or top items
           const filtered = res.data.filter((p) => p.bestSeller || p.isFeatured).slice(0, 4);
           setBestSellers(filtered.length > 0 ? filtered : res.data.slice(0, 4));

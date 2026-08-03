@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Camera,
@@ -8,36 +8,18 @@ import {
   ChevronRight,
   Sparkles,
   ShoppingBag,
-  RefreshCw
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
-import { apiClient } from '../api/apiClient';
+import { useGallery } from '../hooks/useGallery';
 import { Breadcrumb } from '../components/common/Breadcrumb';
 
 export const Gallery = () => {
-  const [galleryItems, setGalleryItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { galleryItems, loading, error } = useGallery();
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
 
-  const fetchGallery = async () => {
-    setLoading(true);
-    try {
-      const res = await apiClient('/gallery');
-      if (res && res.data) {
-        setGalleryItems(res.data);
-      } else {
-        setGalleryItems([]);
-      }
-    } catch (err) {
-      console.warn('Gallery API error:', err.message);
-      setGalleryItems([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchGallery();
-  }, []);
+  // Filter only active images for public view
+  const activeGalleryItems = galleryItems.filter((item) => item.isActive !== false);
 
   const openLightbox = (index) => {
     setSelectedImageIndex(index);
@@ -49,16 +31,18 @@ export const Gallery = () => {
 
   const handlePrevImage = (e) => {
     e.stopPropagation();
+    if (activeGalleryItems.length === 0) return;
     if (selectedImageIndex > 0) {
       setSelectedImageIndex(selectedImageIndex - 1);
     } else {
-      setSelectedImageIndex(galleryItems.length - 1);
+      setSelectedImageIndex(activeGalleryItems.length - 1);
     }
   };
 
   const handleNextImage = (e) => {
     e.stopPropagation();
-    if (selectedImageIndex < galleryItems.length - 1) {
+    if (activeGalleryItems.length === 0) return;
+    if (selectedImageIndex < activeGalleryItems.length - 1) {
       setSelectedImageIndex(selectedImageIndex + 1);
     } else {
       setSelectedImageIndex(0);
@@ -77,7 +61,7 @@ export const Gallery = () => {
       {/* Hero Section */}
       <section className="relative bg-[#5E3718] text-white py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#F9EFDD_1px,transparent_1px)] [background-size:16px_16px]" />
-        
+
         <div className="relative max-w-4xl mx-auto text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#9A6428]/60 text-[#F9EFDD] border border-[#F9EFDD]/20 text-xs font-bold uppercase tracking-widest">
             <Sparkles className="w-4 h-4 text-[#F9EFDD]" />
@@ -102,21 +86,28 @@ export const Gallery = () => {
             <RefreshCw className="w-8 h-8 animate-spin text-[#9A6428]" />
             <p className="text-sm font-semibold">Loading gallery photos...</p>
           </div>
-        ) : galleryItems.length === 0 ? (
+        ) : error ? (
+          /* Error State */
+          <div className="py-16 text-center space-y-3 bg-red-50/50 border border-red-100 rounded-3xl p-8 max-w-md mx-auto">
+            <AlertCircle className="w-10 h-10 text-red-500 mx-auto" />
+            <h3 className="text-base font-bold text-red-800">Unable to load photo gallery</h3>
+            <p className="text-xs text-red-600">{error}</p>
+          </div>
+        ) : activeGalleryItems.length === 0 ? (
           /* Empty State */
-          <div className="py-20 text-center space-y-4">
+          <div className="py-20 text-center space-y-4 bg-white/50 rounded-3xl border border-[#E8DDCF] p-12 max-w-lg mx-auto">
             <Camera className="w-12 h-12 text-[#9A6428]/40 mx-auto" />
-            <h3 className="text-lg font-bold text-[#5E3718]">No gallery photos uploaded yet</h3>
+            <h3 className="text-lg font-bold text-[#5E3718]">No gallery photos available</h3>
             <p className="text-xs text-[#777166]">
-              Gallery photos will appear here once uploaded by the admin.
+              Gallery photos will appear here once added and activated from the admin panel.
             </p>
           </div>
         ) : (
           /* Gallery Grid */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {galleryItems.map((item, index) => (
+            {activeGalleryItems.map((item, index) => (
               <div
-                key={item._id || index}
+                key={item.id || index}
                 onClick={() => openLightbox(index)}
                 className="group relative bg-white rounded-2xl overflow-hidden border border-[#E8DDCF] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col"
               >
@@ -124,10 +115,19 @@ export const Gallery = () => {
                 <div className="relative aspect-4/3 overflow-hidden bg-[#F9EFDD]/40">
                   <img
                     src={item.imageUrl}
-                    alt={item.title}
+                    alt={item.altText || item.title || 'Gajanan Foods photo'}
                     className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
                     loading="lazy"
                   />
+
+                  {/* Category Pill Tag */}
+                  {item.category && (
+                    <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-bold bg-[#5E3718]/85 text-[#F9EFDD] backdrop-blur-xs shadow-xs">
+                      {item.category}
+                    </div>
+                  )}
+
+                  {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <div className="p-3 rounded-full bg-white/90 text-[#5E3718] transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg">
                       <Maximize2 className="w-6 h-6" />
@@ -135,17 +135,17 @@ export const Gallery = () => {
                   </div>
                 </div>
 
-                {/* Content */}
-                {(item.title || item.description) && (
+                {/* Card Information */}
+                {(item.title || item.caption) && (
                   <div className="p-4 sm:p-5 flex-grow flex flex-col justify-between space-y-2">
                     {item.title && (
                       <h3 className="font-bold text-base text-[#5E3718] group-hover:text-[#9A6428] transition-colors line-clamp-1">
                         {item.title}
                       </h3>
                     )}
-                    {item.description && (
+                    {item.caption && (
                       <p className="text-xs text-[#777166] leading-relaxed line-clamp-2">
-                        {item.description}
+                        {item.caption}
                       </p>
                     )}
                   </div>
@@ -176,7 +176,7 @@ export const Gallery = () => {
       </div>
 
       {/* Lightbox Modal */}
-      {selectedImageIndex !== null && galleryItems[selectedImageIndex] && (
+      {selectedImageIndex !== null && activeGalleryItems[selectedImageIndex] && (
         <div
           className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200"
           onClick={closeLightbox}
@@ -216,8 +216,12 @@ export const Gallery = () => {
             {/* Image Box */}
             <div className="md:w-2/3 bg-black flex items-center justify-center p-2 min-h-[300px]">
               <img
-                src={galleryItems[selectedImageIndex].imageUrl}
-                alt={galleryItems[selectedImageIndex].title || 'Gallery image'}
+                src={activeGalleryItems[selectedImageIndex].imageUrl}
+                alt={
+                  activeGalleryItems[selectedImageIndex].altText ||
+                  activeGalleryItems[selectedImageIndex].title ||
+                  'Gallery image'
+                }
                 className="max-h-[70vh] w-auto object-contain rounded-lg"
               />
             </div>
@@ -227,19 +231,24 @@ export const Gallery = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-bold text-[#9A6428] uppercase tracking-wider">
-                    Photo {selectedImageIndex + 1} of {galleryItems.length}
+                    Photo {selectedImageIndex + 1} of {activeGalleryItems.length}
                   </span>
+                  {activeGalleryItems[selectedImageIndex].category && (
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#9A6428]/30 text-[#F9EFDD] border border-[#9A6428]/40">
+                      {activeGalleryItems[selectedImageIndex].category}
+                    </span>
+                  )}
                 </div>
 
-                {galleryItems[selectedImageIndex].title && (
+                {activeGalleryItems[selectedImageIndex].title && (
                   <h2 className="font-serif font-bold text-xl sm:text-2xl text-[#F9EFDD]">
-                    {galleryItems[selectedImageIndex].title}
+                    {activeGalleryItems[selectedImageIndex].title}
                   </h2>
                 )}
 
-                {galleryItems[selectedImageIndex].description && (
+                {activeGalleryItems[selectedImageIndex].caption && (
                   <p className="text-xs sm:text-sm text-white/80 leading-relaxed">
-                    {galleryItems[selectedImageIndex].description}
+                    {activeGalleryItems[selectedImageIndex].caption}
                   </p>
                 )}
               </div>

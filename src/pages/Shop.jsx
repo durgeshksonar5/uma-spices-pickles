@@ -33,8 +33,11 @@ export const Shop = () => {
         status: 'published',
         limit: 100
       });
-      if (res.success && res.data) {
+      if (res?.success && Array.isArray(res.data)) {
         setProducts(res.data);
+      } else {
+        setProducts([]);
+        if (res?.message) setError(res.message);
       }
     } catch (err) {
       console.error('Error fetching shop products:', err);

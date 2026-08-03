@@ -66,7 +66,7 @@ export const ProductDetails = () => {
       setError(null);
       try {
         const res = await productApi.getProductBySlug(slug);
-        if (res.success && res.data) {
+        if (res?.success && res.data) {
           const p = res.data;
           setProduct(p);
           setSelectedSizeIndex(0);
@@ -77,7 +77,7 @@ export const ProductDetails = () => {
             limit: 4,
             status: 'published'
           });
-          if (relRes.success && relRes.data) {
+          if (relRes?.success && Array.isArray(relRes.data)) {
             setRelatedProducts(relRes.data.filter((item) => item.slug !== slug).slice(0, 4));
           }
         }

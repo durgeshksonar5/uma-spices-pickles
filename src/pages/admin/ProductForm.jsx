@@ -87,7 +87,7 @@ export const ProductForm = () => {
         setIsLoading(true);
         try {
           const res = await productApi.getProductById(id);
-          if (res.success && res.data) {
+          if (res?.success && res.data) {
             const p = res.data;
             setFormData({
               name: p.name || '',

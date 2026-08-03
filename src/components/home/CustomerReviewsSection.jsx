@@ -14,7 +14,7 @@ export const CustomerReviewsSection = () => {
       setIsLoading(true);
       try {
         const res = await testimonialApi.getTestimonials();
-        if (res.success && res.data) {
+        if (res?.success && Array.isArray(res.data)) {
           setTestimonials(res.data);
         }
       } catch (err) {

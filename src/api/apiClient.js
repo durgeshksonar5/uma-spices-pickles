@@ -34,9 +34,10 @@ export const apiClient = async (endpoint, options = {}) => {
     const response = await fetch(`${API_BASE_URL}${cleanEndpoint}`, config);
     const data = await response.json().catch(() => null);
 
-    if (!response.ok) {
-      const error = new Error(data?.message || `HTTP error! Status: ${response.status}`);
-      error.status = response.status;
+    if (!response.ok || !data || typeof data !== 'object') {
+      const error = new Error(data?.message || `API endpoint ${cleanEndpoint} returned invalid response or HTML page.`);
+      error.status = response ? response.status : 0;
+      error.isOffline = true;
       error.data = data;
       throw error;
     }

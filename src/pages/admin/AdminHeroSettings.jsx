@@ -37,7 +37,7 @@ export const AdminHeroSettings = () => {
     setIsLoading(true);
     try {
       const res = await settingsApi.getHeroSettings();
-      if (res.success && res.data) {
+      if (res?.success && res.data) {
         setHeroSettings(res.data);
         setImagePreview(res.data.heroImage || DEFAULT_HERO_IMAGE);
       }
