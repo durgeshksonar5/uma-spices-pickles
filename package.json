@@ -12,7 +12,6 @@
     "seed": "node backend/scripts/seed.js"
   },
   "dependencies": {
-    "@rolldown/binding-win32-x64-msvc": "^1.2.1",
     "@tailwindcss/vite": "^4.3.3",
     "lucide-react": "^1.27.0",
     "react": "^19.2.7",
