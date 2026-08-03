@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, User, PhoneCall } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, PhoneCall } from 'lucide-react';
 import { businessConfig } from '../../config/businessConfig';
 import { MobileMenu } from './MobileMenu';
 import logoEnglish from '../../assets/gajanan-food-logo-english.png';
@@ -9,7 +9,6 @@ import logoMarathi from '../../assets/gajanan-food-logo-marathi.png';
 export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
@@ -29,7 +28,6 @@ export const Header = () => {
     { name: 'Shop All', path: '/shop' },
     { name: 'Spices', path: '/shop?category=spices' },
     { name: 'Pickles', path: '/shop?category=pickles' },
-    { name: 'Blends', path: '/shop?category=blends' },
     { name: 'Gallery', path: '/gallery' },
     { name: 'About Us', path: '/about' },
     { name: 'Contact', path: '/contact' }
@@ -108,17 +106,8 @@ export const Header = () => {
               })}
             </nav>
 
-            {/* Right Action Icons: Profile, Contact Us Button */}
+            {/* Right Action Icons: Contact Us Button */}
             <div className="flex items-center gap-2 sm:gap-3">
-              {/* Profile Icon */}
-              <button
-                onClick={() => navigate('/about')}
-                className="hidden sm:flex p-2 rounded-full text-[#171717] hover:text-[#9A6428] hover:bg-[#F9EFDD]/50 transition-colors"
-                aria-label="User Account"
-              >
-                <User className="w-5 h-5" />
-              </button>
-
               {/* Contact Us Button */}
               <Link
                 to="/contact"
