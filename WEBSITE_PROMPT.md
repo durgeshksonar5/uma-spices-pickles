@@ -19,6 +19,8 @@
 - **WhatsApp Accent**: `#25D366` (Order CTA & Floating button)
 - **Star Rating Gold**: `#E9A900` / `#E6A817` (Review stars & badges)
 
+
+
 ### Typography
 - **Headings & Serif Elements**: `'Cormorant Garamond'`, `'Playfair Display'`, Georgia, serif
 - **Body & Interface UI**: `'Inter'`, system-ui, sans-serif
