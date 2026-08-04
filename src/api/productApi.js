@@ -3,7 +3,37 @@ import { products as fallbackProducts } from '../data/products';
 
 const STORAGE_KEY = 'gajanan_products';
 const STORAGE_VERSION_KEY = 'gajanan_products_version';
-const CURRENT_VERSION = '1';
+const CURRENT_VERSION = '2'; // Incremented version to flush any previously saved localStorage duplicates
+
+/**
+ * Deduplicate products array by ID, slug, or normalized name
+ */
+export const deduplicateProducts = (list) => {
+  if (!Array.isArray(list)) return [];
+  const seenKeys = new Set();
+  const result = [];
+
+  for (const item of list) {
+    if (!item) continue;
+    const id = (item._id || item.id || '').toString().trim();
+    const slug = (item.slug || '').toString().trim().toLowerCase();
+    const name = (item.name || '').toString().trim().toLowerCase();
+
+    const primaryKey = id || slug || name;
+    if (!primaryKey) continue;
+
+    // Build compound keys to prevent matching variations
+    const keysToCheck = [id && `id:${id}`, slug && `slug:${slug}`, name && `name:${name}`].filter(Boolean);
+    const isDuplicate = keysToCheck.some((k) => seenKeys.has(k));
+
+    if (!isDuplicate) {
+      keysToCheck.forEach((k) => seenKeys.add(k));
+      result.push(item);
+    }
+  }
+
+  return result;
+};
 
 const getDeletedIds = () => {
   try {
@@ -22,12 +52,22 @@ const addDeletedId = (id) => {
       localStorage.setItem('gajanan_deleted_product_ids', JSON.stringify(current));
     }
   } catch (e) {}
+
+  // Also remove from stored custom products and stored standard products
+  try {
+    const customs = getCustomProducts().filter((p) => (p._id || p.id) !== id && p.slug !== id);
+    localStorage.setItem('gajanan_custom_products', JSON.stringify(customs));
+
+    const stored = getStoredProducts().filter((p) => (p._id || p.id) !== id && p.slug !== id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+  } catch (e) {}
 };
 
 const getCustomProducts = () => {
   try {
     const raw = localStorage.getItem('gajanan_custom_products');
-    return raw ? JSON.parse(raw) : [];
+    const parsed = raw ? JSON.parse(raw) : [];
+    return deduplicateProducts(parsed);
   } catch (e) {
     return [];
   }
@@ -37,38 +77,43 @@ const saveCustomProduct = (newProd) => {
   try {
     const prods = getCustomProducts();
     const targetId = newProd._id || newProd.id;
-    const idx = prods.findIndex((p) => (p._id || p.id) === targetId);
+    const idx = prods.findIndex((p) => (p._id || p.id) === targetId || p.slug === newProd.slug);
     if (idx >= 0) {
       prods[idx] = newProd;
     } else {
       prods.unshift(newProd);
     }
-    localStorage.setItem('gajanan_custom_products', JSON.stringify(prods));
+    const deduped = deduplicateProducts(prods);
+    localStorage.setItem('gajanan_custom_products', JSON.stringify(deduped));
   } catch (e) {}
 };
 
 /**
- * Get or seed default products from localStorage
+ * Get or seed default products from localStorage (deduplicated)
  */
 export const getStoredProducts = () => {
   try {
     const storedVersion = localStorage.getItem(STORAGE_VERSION_KEY);
     const raw = localStorage.getItem(STORAGE_KEY);
 
+    let baseList = fallbackProducts;
+
     if (raw && storedVersion === CURRENT_VERSION) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        baseList = parsed;
       }
     }
 
-    // Seed default products to localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(fallbackProducts));
+    const deduped = deduplicateProducts(baseList);
+
+    // Save clean deduplicated array to localStorage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(deduped));
     localStorage.setItem(STORAGE_VERSION_KEY, CURRENT_VERSION);
-    return fallbackProducts;
+    return deduped;
   } catch (err) {
     console.error('[productApi] Storage access error, using in-memory fallback:', err);
-    return fallbackProducts;
+    return deduplicateProducts(fallbackProducts);
   }
 };
 
@@ -88,13 +133,27 @@ const filterAndSortProducts = (productsList, params = {}) => {
   const deletedIds = getDeletedIds();
   const customProducts = getCustomProducts();
 
-  const existingIds = productsList.map((p) => p.id || p._id);
-  const uniqueCustoms = customProducts.filter((c) => !existingIds.includes(c._id || c.id));
-  const combined = [...customProducts, ...productsList];
+  // Combine custom & catalog products and strictly deduplicate
+  const combined = deduplicateProducts([...customProducts, ...productsList]);
 
   let filtered = combined.filter(
     (p) => !deletedIds.includes(p.id) && !deletedIds.includes(p._id) && !deletedIds.includes(p.slug)
   );
+
+  if (params.status && params.status !== 'all') {
+    filtered = filtered.filter((p) => p.status === params.status || (params.status === 'published' && !p.status));
+  }
+
+  if (params.search && params.search.trim()) {
+    const q = params.search.toLowerCase().trim();
+    filtered = filtered.filter(
+      (p) =>
+        (p.name && p.name.toLowerCase().includes(q)) ||
+        (p.sku && p.sku.toLowerCase().includes(q)) ||
+        (p.category && p.category.toLowerCase().includes(q)) ||
+        (p.slug && p.slug.toLowerCase().includes(q))
+    );
+  }
 
   if (params.category && params.category !== 'all') {
     filtered = filtered.filter((p) => isCategoryMatch(p.category, params.category));
@@ -189,7 +248,7 @@ export const productApi = {
 
     const customs = getCustomProducts();
     const stored = getStoredProducts();
-    const local = [...customs, ...stored].find((p) => p.id === id || p._id === id);
+    const local = [...customs, ...stored].find((p) => (p._id || p.id) === id);
 
     if (local) {
       return { success: true, data: local };

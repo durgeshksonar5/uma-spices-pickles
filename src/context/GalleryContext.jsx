@@ -14,6 +14,7 @@ import {
   reorderGalleryImages as reorderIndexedDBImages
 } from '../services/galleryStorage';
 import { optimizeImage, blobToBase64, dataURLToBlob } from '../utils/imageOptimizer';
+import { defaultGalleryItems } from '../data/defaultGallery';
 
 export const GalleryContext = createContext(null);
 
@@ -67,7 +68,19 @@ export const GalleryProvider = ({ children }) => {
       setStorageSource(result.source || 'vercel_blob');
 
       if (result.source === 'indexeddb') {
-        const rawRecords = result.images || [];
+        let rawRecords = result.images || [];
+
+        // If local storage is empty, seed with initial default gallery items
+        if (rawRecords.length === 0) {
+          try {
+            await addMultipleGalleryImages(defaultGalleryItems);
+            rawRecords = await getAllGalleryImages();
+          } catch (seedErr) {
+            console.warn('Failed to seed default gallery items to IndexedDB:', seedErr);
+            rawRecords = defaultGalleryItems;
+          }
+        }
+
         const newIdsSet = new Set(rawRecords.map((r) => r.id));
 
         objectUrlsMapRef.current.forEach((url, id) => {
@@ -86,14 +99,20 @@ export const GalleryProvider = ({ children }) => {
           }
           return {
             ...item,
-            imageUrl: objectUrl || item.imageUrl || ''
+            imageUrl: objectUrl || item.imageUrl || item.url || ''
           };
         });
 
         setGalleryItems(processedItems);
       } else {
-        // Vercel Blob items already have permanent public URLs
-        const items = (result.images || []).map((item, index) => ({
+        // Vercel Blob items
+        let rawBlobs = result.images || [];
+        if (rawBlobs.length === 0) {
+          // Fallback to default items if Vercel Blob has no items yet
+          rawBlobs = defaultGalleryItems;
+        }
+
+        const items = rawBlobs.map((item, index) => ({
           ...item,
           id: item.id || `img_blob_${index}`,
           imageUrl: item.url || item.imageUrl || '',
@@ -114,7 +133,7 @@ export const GalleryProvider = ({ children }) => {
     } catch (err) {
       console.error('Failed to load gallery:', err);
       setError(err.message || 'Failed to load gallery photos.');
-      setGalleryItems([]);
+      setGalleryItems(defaultGalleryItems);
     } finally {
       setLoading(false);
     }
@@ -359,6 +378,103 @@ export const GalleryProvider = ({ children }) => {
     await loadGallery();
   };
 
+  /**
+   * Export gallery JSON backup including image Blobs as Base64 Data URLs
+   */
+  const exportBackup = async () => {
+    const exportItems = await Promise.all(
+      galleryItems.map(async (item) => {
+        let base64Data = null;
+        if (item.imageBlob) {
+          try {
+            base64Data = await blobToBase64(item.imageBlob);
+          } catch (e) {}
+        }
+        return {
+          id: item.id,
+          title: item.title || '',
+          altText: item.altText || '',
+          caption: item.caption || '',
+          category: item.category || 'General',
+          displayOrder: item.displayOrder ?? 0,
+          isActive: item.isActive ?? true,
+          imageUrl: item.imageUrl || item.url || '',
+          url: item.url || '',
+          pathname: item.pathname || '',
+          originalFileName: item.originalFileName || 'image.jpg',
+          mimeType: item.mimeType || 'image/jpeg',
+          fileSize: item.fileSize || 0,
+          base64Data,
+          createdAt: item.createdAt || new Date().toISOString(),
+          updatedAt: item.updatedAt || new Date().toISOString()
+        };
+      })
+    );
+
+    const backupObj = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      totalImages: exportItems.length,
+      images: exportItems
+    };
+
+    const jsonStr = JSON.stringify(backupObj, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `gajanan_gallery_backup_${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  /**
+   * Import gallery JSON backup
+   */
+  const importBackup = async (jsonFile) => {
+    const text = await jsonFile.text();
+    const backupObj = JSON.parse(text);
+    if (!backupObj || !Array.isArray(backupObj.images)) {
+      throw new Error('Invalid backup file format: missing "images" array.');
+    }
+
+    const importedRecords = backupObj.images.map((item, idx) => {
+      let imageBlob = null;
+      if (item.base64Data) {
+        try {
+          imageBlob = dataURLToBlob(item.base64Data);
+        } catch (e) {}
+      }
+
+      return {
+        id: item.id || `img_imp_${Date.now()}_${idx}`,
+        imageUrl: item.imageUrl || item.url || '',
+        url: item.url || '',
+        pathname: item.pathname || '',
+        imageBlob,
+        originalFileName: item.originalFileName || 'image.jpg',
+        mimeType: item.mimeType || 'image/jpeg',
+        fileSize: item.fileSize || (imageBlob ? imageBlob.size : 0),
+        title: item.title || '',
+        altText: item.altText || item.title || 'Gallery image',
+        caption: item.caption || '',
+        category: item.category || 'General',
+        displayOrder: typeof item.displayOrder === 'number' ? item.displayOrder : idx,
+        isActive: typeof item.isActive === 'boolean' ? item.isActive : true,
+        createdAt: item.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+    });
+
+    await clearGalleryImages();
+    await addMultipleGalleryImages(importedRecords);
+    notifyGalleryChanged();
+    await loadGallery();
+    return importedRecords.length;
+  };
+
   const value = {
     galleryItems,
     loading,
@@ -370,8 +486,12 @@ export const GalleryProvider = ({ children }) => {
     replaceImage,
     deleteImage,
     toggleActiveStatus,
-    reorderImages
+    reorderImages,
+    exportBackup,
+    importBackup
   };
 
   return <GalleryContext.Provider value={value}>{children}</GalleryContext.Provider>;
 };
+
+export default GalleryProvider;

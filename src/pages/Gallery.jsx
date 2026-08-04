@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Camera,
@@ -9,7 +9,8 @@ import {
   Sparkles,
   ShoppingBag,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  Filter
 } from 'lucide-react';
 import { useGallery } from '../hooks/useGallery';
 import { Breadcrumb } from '../components/common/Breadcrumb';
@@ -17,9 +18,19 @@ import { Breadcrumb } from '../components/common/Breadcrumb';
 export const Gallery = () => {
   const { galleryItems, loading, error } = useGallery();
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+  const [activeCategory, setActiveCategory] = useState('All');
 
   // Filter only active images for public view
   const activeGalleryItems = galleryItems.filter((item) => item.isActive !== false);
+
+  // Extract unique categories for filter bar
+  const availableCategories = ['All', ...Array.from(new Set(activeGalleryItems.map((item) => item.category || 'General')))];
+
+  // Filtered by selected category
+  const filteredGalleryItems = activeGalleryItems.filter((item) => {
+    if (activeCategory === 'All') return true;
+    return item.category === activeCategory;
+  });
 
   const openLightbox = (index) => {
     setSelectedImageIndex(index);
@@ -30,24 +41,43 @@ export const Gallery = () => {
   };
 
   const handlePrevImage = (e) => {
-    e.stopPropagation();
-    if (activeGalleryItems.length === 0) return;
-    if (selectedImageIndex > 0) {
-      setSelectedImageIndex(selectedImageIndex - 1);
-    } else {
-      setSelectedImageIndex(activeGalleryItems.length - 1);
-    }
+    if (e) e.stopPropagation();
+    if (filteredGalleryItems.length === 0) return;
+    setSelectedImageIndex((prevIndex) =>
+      prevIndex > 0 ? prevIndex - 1 : filteredGalleryItems.length - 1
+    );
   };
 
   const handleNextImage = (e) => {
-    e.stopPropagation();
-    if (activeGalleryItems.length === 0) return;
-    if (selectedImageIndex < activeGalleryItems.length - 1) {
-      setSelectedImageIndex(selectedImageIndex + 1);
-    } else {
-      setSelectedImageIndex(0);
-    }
+    if (e) e.stopPropagation();
+    if (filteredGalleryItems.length === 0) return;
+    setSelectedImageIndex((prevIndex) =>
+      prevIndex < filteredGalleryItems.length - 1 ? prevIndex + 1 : 0
+    );
   };
+
+  // Keyboard navigation for Lightbox
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (selectedImageIndex === null) return;
+      if (e.key === 'Escape') {
+        setSelectedImageIndex(null);
+      } else if (e.key === 'ArrowLeft') {
+        if (filteredGalleryItems.length === 0) return;
+        setSelectedImageIndex((prevIndex) =>
+          prevIndex > 0 ? prevIndex - 1 : filteredGalleryItems.length - 1
+        );
+      } else if (e.key === 'ArrowRight') {
+        if (filteredGalleryItems.length === 0) return;
+        setSelectedImageIndex((prevIndex) =>
+          prevIndex < filteredGalleryItems.length - 1 ? prevIndex + 1 : 0
+        );
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedImageIndex, filteredGalleryItems.length]);
 
   return (
     <div className="min-h-screen bg-[#FFFBF5] text-[#171717] pb-16">
@@ -79,7 +109,35 @@ export const Gallery = () => {
       </section>
 
       {/* Main Content Area */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 space-y-8">
+        {/* Category Filter Tabs */}
+        {!loading && !error && activeGalleryItems.length > 0 && (
+          <div className="flex items-center justify-center">
+            <div className="flex flex-wrap items-center justify-center gap-2 p-1.5 bg-white rounded-2xl border border-[#E8DDCF] shadow-2xs">
+              <span className="hidden sm:inline-flex items-center gap-1 px-3 text-xs font-bold text-[#777166]">
+                <Filter className="w-3.5 h-3.5 text-[#9A6428]" />
+                <span>Filter:</span>
+              </span>
+              {availableCategories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    setActiveCategory(cat);
+                    setSelectedImageIndex(null);
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+                    activeCategory === cat
+                      ? 'bg-[#9A6428] text-white shadow-xs'
+                      : 'text-[#5E3718] hover:bg-[#F9EFDD]/60'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Loading State */}
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center space-y-3 text-[#777166]">
@@ -93,19 +151,29 @@ export const Gallery = () => {
             <h3 className="text-base font-bold text-red-800">Unable to load photo gallery</h3>
             <p className="text-xs text-red-600">{error}</p>
           </div>
-        ) : activeGalleryItems.length === 0 ? (
+        ) : filteredGalleryItems.length === 0 ? (
           /* Empty State */
           <div className="py-20 text-center space-y-4 bg-white/50 rounded-3xl border border-[#E8DDCF] p-12 max-w-lg mx-auto">
             <Camera className="w-12 h-12 text-[#9A6428]/40 mx-auto" />
-            <h3 className="text-lg font-bold text-[#5E3718]">No gallery photos available</h3>
+            <h3 className="text-lg font-bold text-[#5E3718]">No gallery photos found</h3>
             <p className="text-xs text-[#777166]">
-              Gallery photos will appear here once added and activated from the admin panel.
+              {activeCategory !== 'All'
+                ? `No photos currently available in "${activeCategory}" category.`
+                : 'Gallery photos will appear here once added and activated from the admin panel.'}
             </p>
+            {activeCategory !== 'All' && (
+              <button
+                onClick={() => setActiveCategory('All')}
+                className="px-4 py-2 rounded-xl bg-[#9A6428] text-white text-xs font-bold hover:bg-[#80511D]"
+              >
+                View All Categories
+              </button>
+            )}
           </div>
         ) : (
           /* Gallery Grid */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {activeGalleryItems.map((item, index) => (
+            {filteredGalleryItems.map((item, index) => (
               <div
                 key={item.id || index}
                 onClick={() => openLightbox(index)}
@@ -176,7 +244,7 @@ export const Gallery = () => {
       </div>
 
       {/* Lightbox Modal */}
-      {selectedImageIndex !== null && activeGalleryItems[selectedImageIndex] && (
+      {selectedImageIndex !== null && filteredGalleryItems[selectedImageIndex] && (
         <div
           className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200"
           onClick={closeLightbox}
@@ -216,10 +284,10 @@ export const Gallery = () => {
             {/* Image Box */}
             <div className="md:w-2/3 bg-black flex items-center justify-center p-2 min-h-[300px]">
               <img
-                src={activeGalleryItems[selectedImageIndex].imageUrl}
+                src={filteredGalleryItems[selectedImageIndex].imageUrl}
                 alt={
-                  activeGalleryItems[selectedImageIndex].altText ||
-                  activeGalleryItems[selectedImageIndex].title ||
+                  filteredGalleryItems[selectedImageIndex].altText ||
+                  filteredGalleryItems[selectedImageIndex].title ||
                   'Gallery image'
                 }
                 className="max-h-[70vh] w-auto object-contain rounded-lg"
@@ -231,24 +299,24 @@ export const Gallery = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-bold text-[#9A6428] uppercase tracking-wider">
-                    Photo {selectedImageIndex + 1} of {activeGalleryItems.length}
+                    Photo {selectedImageIndex + 1} of {filteredGalleryItems.length}
                   </span>
-                  {activeGalleryItems[selectedImageIndex].category && (
+                  {filteredGalleryItems[selectedImageIndex].category && (
                     <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#9A6428]/30 text-[#F9EFDD] border border-[#9A6428]/40">
-                      {activeGalleryItems[selectedImageIndex].category}
+                      {filteredGalleryItems[selectedImageIndex].category}
                     </span>
                   )}
                 </div>
 
-                {activeGalleryItems[selectedImageIndex].title && (
+                {filteredGalleryItems[selectedImageIndex].title && (
                   <h2 className="font-serif font-bold text-xl sm:text-2xl text-[#F9EFDD]">
-                    {activeGalleryItems[selectedImageIndex].title}
+                    {filteredGalleryItems[selectedImageIndex].title}
                   </h2>
                 )}
 
-                {activeGalleryItems[selectedImageIndex].caption && (
+                {filteredGalleryItems[selectedImageIndex].caption && (
                   <p className="text-xs sm:text-sm text-white/80 leading-relaxed">
-                    {activeGalleryItems[selectedImageIndex].caption}
+                    {filteredGalleryItems[selectedImageIndex].caption}
                   </p>
                 )}
               </div>
