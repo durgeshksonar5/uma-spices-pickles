@@ -8,20 +8,17 @@ import {
   ChevronRight,
   Sparkles,
   ShoppingBag,
-  RefreshCw,
-  AlertCircle,
   Filter
 } from 'lucide-react';
-import { useGallery } from '../hooks/useGallery';
+import { defaultGalleryItems } from '../data/defaultGallery';
 import { Breadcrumb } from '../components/common/Breadcrumb';
 
 export const Gallery = () => {
-  const { galleryItems, loading, error } = useGallery();
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
   const [activeCategory, setActiveCategory] = useState('All');
 
-  // Filter only active images for public view
-  const activeGalleryItems = galleryItems.filter((item) => item.isActive !== false);
+  // Static gallery items
+  const activeGalleryItems = defaultGalleryItems.filter((item) => item.isActive !== false);
 
   // Extract unique categories for filter bar
   const availableCategories = ['All', ...Array.from(new Set(activeGalleryItems.map((item) => item.category || 'General')))];
@@ -111,7 +108,7 @@ export const Gallery = () => {
       {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 space-y-8">
         {/* Category Filter Tabs */}
-        {!loading && !error && activeGalleryItems.length > 0 && (
+        {activeGalleryItems.length > 0 && (
           <div className="flex items-center justify-center">
             <div className="flex flex-wrap items-center justify-center gap-2 p-1.5 bg-white rounded-2xl border border-[#E8DDCF] shadow-2xs">
               <span className="hidden sm:inline-flex items-center gap-1 px-3 text-xs font-bold text-[#777166]">
@@ -138,20 +135,7 @@ export const Gallery = () => {
           </div>
         )}
 
-        {/* Loading State */}
-        {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center space-y-3 text-[#777166]">
-            <RefreshCw className="w-8 h-8 animate-spin text-[#9A6428]" />
-            <p className="text-sm font-semibold">Loading gallery photos...</p>
-          </div>
-        ) : error ? (
-          /* Error State */
-          <div className="py-16 text-center space-y-3 bg-red-50/50 border border-red-100 rounded-3xl p-8 max-w-md mx-auto">
-            <AlertCircle className="w-10 h-10 text-red-500 mx-auto" />
-            <h3 className="text-base font-bold text-red-800">Unable to load photo gallery</h3>
-            <p className="text-xs text-red-600">{error}</p>
-          </div>
-        ) : filteredGalleryItems.length === 0 ? (
+        {filteredGalleryItems.length === 0 ? (
           /* Empty State */
           <div className="py-20 text-center space-y-4 bg-white/50 rounded-3xl border border-[#E8DDCF] p-12 max-w-lg mx-auto">
             <Camera className="w-12 h-12 text-[#9A6428]/40 mx-auto" />
@@ -159,7 +143,7 @@ export const Gallery = () => {
             <p className="text-xs text-[#777166]">
               {activeCategory !== 'All'
                 ? `No photos currently available in "${activeCategory}" category.`
-                : 'Gallery photos will appear here once added and activated from the admin panel.'}
+                : 'No gallery photos currently available.'}
             </p>
             {activeCategory !== 'All' && (
               <button
@@ -188,13 +172,6 @@ export const Gallery = () => {
                     loading="lazy"
                   />
 
-                  {/* Category Pill Tag */}
-                  {item.category && (
-                    <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-bold bg-[#5E3718]/85 text-[#F9EFDD] backdrop-blur-xs shadow-xs">
-                      {item.category}
-                    </div>
-                  )}
-
                   {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <div className="p-3 rounded-full bg-white/90 text-[#5E3718] transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg">
@@ -202,22 +179,6 @@ export const Gallery = () => {
                     </div>
                   </div>
                 </div>
-
-                {/* Card Information */}
-                {(item.title || item.caption) && (
-                  <div className="p-4 sm:p-5 flex-grow flex flex-col justify-between space-y-2">
-                    {item.title && (
-                      <h3 className="font-bold text-base text-[#5E3718] group-hover:text-[#9A6428] transition-colors line-clamp-1">
-                        {item.title}
-                      </h3>
-                    )}
-                    {item.caption && (
-                      <p className="text-xs text-[#777166] leading-relaxed line-clamp-2">
-                        {item.caption}
-                      </p>
-                    )}
-                  </div>
-                )}
               </div>
             ))}
           </div>

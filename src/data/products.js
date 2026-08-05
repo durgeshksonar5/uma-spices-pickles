@@ -1,5 +1,32 @@
 export const products = [
   {
+    "id": "prod-chaha-masala",
+    "slug": "chaha-masala",
+    "name": "chaha masala ",
+    "descriptor": "Pure & Authentic",
+    "category": "blends--",
+    "subcategory": "",
+    "shortDescription": "123",
+    "fullDescription": "123",
+    "images": [
+      "/assets/products/chaha-masala-1785829705034-0.jpeg"
+    ],
+    "price": 299,
+    "originalPrice": 299,
+    "discount": 0,
+    "availableSizes": [],
+    "ingredients": "",
+    "rating": 5,
+    "reviewCount": 0,
+    "stock": 50,
+    "featured": false,
+    "bestSeller": false,
+    "sku": "GAJ-BLE-CHA-98",
+    "shelfLife": "12 Months",
+    "storageInstructions": "Store in a cool, dry place away from direct sunlight.",
+    "createdAt": "2026-08-04T07:48:25.041Z"
+  },
+  {
     "id": "prod-flaxseed-chutney--",
     "slug": "flaxseed-chutney--",
     "name": "Flaxseed Chutney (जवस चटणी)",

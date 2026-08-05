@@ -33,7 +33,6 @@ const ProductForm = lazy(() => import('./pages/admin/ProductForm'));
 const AdminHeroSettings = lazy(() => import('./pages/admin/AdminHeroSettings'));
 const AdminFestiveDealSettings = lazy(() => import('./pages/admin/AdminFestiveDealSettings'));
 const AdminTestimonials = lazy(() => import('./pages/admin/AdminTestimonials'));
-const AdminGallery = lazy(() => import('./pages/admin/AdminGallery'));
 const AddCategory = lazy(() => import('./pages/admin/AddCategory'));
 
 export const App = () => {
@@ -66,7 +65,6 @@ export const App = () => {
                       <Route path="/admin/hero-banner" element={<AdminHeroSettings />} />
                       <Route path="/admin/festive-deal" element={<AdminFestiveDealSettings />} />
                       <Route path="/admin/testimonials" element={<AdminTestimonials />} />
-                      <Route path="/admin/gallery" element={<AdminGallery />} />
                     </Route>
                   </Route>
 

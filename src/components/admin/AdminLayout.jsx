@@ -15,8 +15,7 @@ import {
   Store,
   Image as ImageIcon,
   MessageSquare,
-  Gift,
-  Camera
+  Gift
 } from 'lucide-react';
 
 export const AdminLayout = () => {
@@ -34,7 +33,6 @@ export const AdminLayout = () => {
     { label: 'All Products', path: '/admin/products', icon: Package, end: true },
     { label: 'Add Product', path: '/admin/products/add', icon: PlusCircle, end: true },
     { label: 'Add Category', path: '/admin/categories/add', icon: FolderPlus, end: true },
-    { label: 'Gallery', path: '/admin/gallery', icon: Camera, end: true },
     { label: 'Hero Banner', path: '/admin/hero-banner', icon: ImageIcon, end: true },
     { label: 'Festive Deal', path: '/admin/festive-deal', icon: Gift, end: true },
     { label: 'Testimonials', path: '/admin/testimonials', icon: MessageSquare, end: true }
